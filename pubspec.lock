@@ -104,6 +104,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.4"
+  flutter_signin_button:
+    dependency: "direct main"
+    description:
+      name: flutter_signin_button
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.0"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -114,6 +121,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  font_awesome_flutter:
+    dependency: transitive
+    description:
+      name: font_awesome_flutter
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "9.1.0"
   google_sign_in:
     dependency: "direct main"
     description:
@@ -170,6 +184,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.12.10"
+  mdi:
+    dependency: "direct main"
+    description:
+      name: mdi
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "5.0.0-nullsafety.0"
   meta:
     dependency: transitive
     description:
@@ -177,6 +198,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.7.0"
+  nested:
+    dependency: transitive
+    description:
+      name: nested
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.0"
   path:
     dependency: transitive
     description:
@@ -191,6 +219,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
+  provider:
+    dependency: "direct main"
+    description:
+      name: provider
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "6.0.1"
   quiver:
     dependency: transitive
     description:
