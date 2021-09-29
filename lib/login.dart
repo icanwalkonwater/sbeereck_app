@@ -4,15 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-
-// Stolen straight from the docs
-Future<UserCredential> signInWithGoogleWeb() async {
-  GoogleAuthProvider googleProvider = GoogleAuthProvider();
-
-  googleProvider.addScope('https://www.googleapis.com/auth/contacts.readonly');
-
-  return await FirebaseAuth.instance.signInWithPopup(googleProvider);
-}
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -55,9 +47,19 @@ class _LoginPageState extends State<LoginPage> {
     return (await FirebaseAuth.instance.signInWithCredential(credentials)).user;
   }
 
+  Future<User?> _signInWithGoogleWeb() async {
+    GoogleAuthProvider googleProvider = GoogleAuthProvider();
+    googleProvider.addScope('https://www.googleapis.com/auth/contacts.readonly');
+    return (await FirebaseAuth.instance.signInWithPopup(googleProvider)).user;
+  }
+
   void _onClickLogin() {
     setState(() {
-      _credentials = _signInWithGoogleNative();
+      if (kIsWeb) {
+        _credentials = _signInWithGoogleWeb();
+      } else {
+        _credentials = _signInWithGoogleNative();
+      }
     });
   }
 
@@ -73,17 +75,14 @@ class _LoginPageState extends State<LoginPage> {
               widthFactor: 0.5,
               child: Image.asset('assets/logo.png'),
             ),
-            FractionallySizedBox(heightFactor: 0.1, child: Container()),
             FractionallySizedBox(
-              widthFactor: 0.6,
-              child: SignInButton(Buttons.GoogleDark, onPressed: _onClickLogin),
+              widthFactor: 0.5,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 40, bottom: 100),
+                child: SignInButton(Buttons.GoogleDark, onPressed: _onClickLogin),
+              ),
             )
           ]);
-
-          return Center(
-              child: IntrinsicHeight(
-                  child: SignInButton(Buttons.GoogleDark,
-                      onPressed: _onClickLogin)));
         }
 
         // If done
