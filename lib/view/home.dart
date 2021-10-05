@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sbeereck_app/accounts.dart';
+import 'package:mdi/mdi.dart';
+import 'package:provider/provider.dart';
+import 'package:sbeereck_app/data/providers.dart';
+import 'package:sbeereck_app/view/accounts.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -9,6 +12,12 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("S'Beer Eck"),
+        actions: [
+          Consumer<ThemeModel>(
+              builder: (ctx, model, w) => IconButton(
+                  icon: const Icon(Mdi.brightness6),
+                  onPressed: () => model.switchTheme())),
+        ],
       ),
       body: const AccountList(),
       bottomNavigationBar: BottomNavigationBar(

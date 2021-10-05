@@ -7,7 +7,7 @@ import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
-import 'model.dart';
+import '../data/providers.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -66,7 +66,9 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       _credentials = credentials.then((value) {
-        if (value  != null) { model.user = value; }
+        if (value != null) {
+          model.user = value;
+        }
         return value;
       });
     });
@@ -83,19 +85,22 @@ class _LoginPageState extends State<LoginPage> {
           builder: (context, AsyncSnapshot<User?> snapshot) {
             // If no logging process
             if (snapshot.connectionState == ConnectionState.none) {
-              return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                FractionallySizedBox(
-                  widthFactor: 0.5,
-                  child: Image.asset('assets/logo.png'),
-                ),
-                FractionallySizedBox(
-                  widthFactor: 0.5,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 40, bottom: 100),
-                    child: SignInButton(Buttons.GoogleDark, onPressed: () => _onClickLogin(auth)),
-                  ),
-                )
-              ]);
+              return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    FractionallySizedBox(
+                      widthFactor: 0.5,
+                      child: Image.asset('assets/logo.png'),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: 0.5,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 40, bottom: 100),
+                        child: SignInButton(Buttons.GoogleDark,
+                            onPressed: () => _onClickLogin(auth)),
+                      ),
+                    )
+                  ]);
             }
 
             // If done
