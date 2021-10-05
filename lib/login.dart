@@ -1,10 +1,13 @@
 import 'dart:developer';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:provider/provider.dart';
+
+import 'model.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -18,12 +21,12 @@ class _LoginPageState extends State<LoginPage> {
   Future<User?>? _credentials;
 
   _LoginPageState() {
-    // if (_google.currentUser != null) {
-    //   // If the currentUser is already there, calling this should be instantaneous.
-    //   setState(() {
-    //     _credentials = _signInWithGoogleNative();
-    //   });
-    // }
+    if (_google.currentUser != null) {
+      // If the currentUser is already there, calling this should be instantaneous.
+      setState(() {
+        _credentials = _signInWithGoogleNative();
+      });
+    }
   }
 
   Future<User?> _signInWithGoogleNative() async {
@@ -49,57 +52,69 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<User?> _signInWithGoogleWeb() async {
     GoogleAuthProvider googleProvider = GoogleAuthProvider();
-    googleProvider.addScope('https://www.googleapis.com/auth/contacts.readonly');
     return (await FirebaseAuth.instance.signInWithPopup(googleProvider)).user;
   }
 
-  void _onClickLogin() {
+  void _onClickLogin(AuthModel model) {
     setState(() {
+      Future<User?> credentials;
+
       if (kIsWeb) {
-        _credentials = _signInWithGoogleWeb();
+        credentials = _signInWithGoogleWeb();
       } else {
-        _credentials = _signInWithGoogleNative();
+        credentials = _signInWithGoogleNative();
       }
+
+      _credentials = credentials.then((value) {
+        if (value  != null) { model.user = value; }
+        return value;
+      });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _credentials,
-      builder: (context, AsyncSnapshot<User?> snapshot) {
-        // If no logging process
-        if (snapshot.connectionState == ConnectionState.none) {
-          return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            FractionallySizedBox(
-              widthFactor: 0.5,
-              child: Image.asset('assets/logo.png'),
-            ),
-            FractionallySizedBox(
-              widthFactor: 0.5,
-              child: Padding(
-                padding: const EdgeInsets.only(top: 40, bottom: 100),
-                child: SignInButton(Buttons.GoogleDark, onPressed: _onClickLogin),
-              ),
-            )
-          ]);
-        }
+    AuthModel auth = context.read<AuthModel>();
 
-        // If done
-        if (snapshot.connectionState == ConnectionState.done) {
-          if (snapshot.hasData) {
-            log('Data: ' + snapshot.data.toString());
-            return const Center(child: Text('Connected'));
-          } else if (snapshot.hasError) {
-            log('Error', error: snapshot.error);
-            return const Center(child: Text('Error ! See console'));
-          } else {
-            return const Center(child: Text('WTF, no data'));
-          }
-        }
+    return Scaffold(
+      body: Center(
+        child: FutureBuilder(
+          future: _credentials,
+          builder: (context, AsyncSnapshot<User?> snapshot) {
+            // If no logging process
+            if (snapshot.connectionState == ConnectionState.none) {
+              return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                FractionallySizedBox(
+                  widthFactor: 0.5,
+                  child: Image.asset('assets/logo.png'),
+                ),
+                FractionallySizedBox(
+                  widthFactor: 0.5,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 40, bottom: 100),
+                    child: SignInButton(Buttons.GoogleDark, onPressed: () => _onClickLogin(auth)),
+                  ),
+                )
+              ]);
+            }
 
-        return const Center(child: CircularProgressIndicator());
-      },
+            // If done
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasData) {
+                log('Data: ' + snapshot.data.toString());
+                return const Center(child: Text('Connected'));
+              } else if (snapshot.hasError) {
+                log('Error', error: snapshot.error);
+                return const Center(child: Text('Error ! See console'));
+              } else {
+                return const Center(child: Text('WTF, no data'));
+              }
+            }
+
+            return const Center(child: CircularProgressIndicator());
+          },
+        ),
+      ),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import 'home.dart';
 import 'login.dart';
 import 'model.dart';
 
@@ -13,17 +14,17 @@ void main() async {
 
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (ctx) => AuthModel()),
-  ], child: const SbeereckApp()));
+  ], child: const FirebaseWaitReadyApp()));
 }
 
-class SbeereckApp extends StatefulWidget {
-  const SbeereckApp({Key? key}) : super(key: key);
+class FirebaseWaitReadyApp extends StatefulWidget {
+  const FirebaseWaitReadyApp({Key? key}) : super(key: key);
 
   @override
-  _SbeereckAppState createState() => _SbeereckAppState();
+  _FirebaseWaitReadyAppState createState() => _FirebaseWaitReadyAppState();
 }
 
-class _SbeereckAppState extends State<SbeereckApp> {
+class _FirebaseWaitReadyAppState extends State<FirebaseWaitReadyApp> {
   final Future<FirebaseApp> _initialisation = Firebase.initializeApp();
 
   @override
@@ -88,24 +89,6 @@ class _AppReadyState extends State<AppReady> {
         },
       );
       },
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: const Center(child: Text("Hey")),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle_rounded), label: 'Comptes'),
-          BottomNavigationBarItem(icon: Icon(Icons.anchor), label: 'Bières')
-        ],
-      ),
     );
   }
 }
