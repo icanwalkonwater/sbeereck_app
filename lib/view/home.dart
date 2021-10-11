@@ -1,15 +1,51 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:mdi/mdi.dart';
 import 'package:provider/provider.dart';
 import 'package:sbeereck_app/data/providers.dart';
+import 'package:sbeereck_app/view/account_creation.dart';
 import 'package:sbeereck_app/view/accounts.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+enum _TabsIndex {
+  accounts,
+  beers,
+}
+
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  late TabController _tabController;
+
+  // Used only for the bottom nav bar
+  int _currentIndex = _TabsIndex.accounts.index;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController =
+        TabController(length: _TabsIndex.values.length, vsync: this);
+    _tabController.addListener(
+        () => setState(() => _currentIndex = _tabController.index));
+  }
+
+  void _handleDialogAddAccount(BuildContext context) {
+    showDialog(
+        context: context,
+        useRootNavigator: false,
+        barrierDismissible: false,
+        builder: (ctx) => const AccountCreationForm());
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Top bar
       appBar: AppBar(
         title: const Text("S'Beer Eck"),
         actions: [
@@ -19,13 +55,30 @@ class HomePage extends StatelessWidget {
                   onPressed: () => model.switchTheme())),
         ],
       ),
-      body: const AccountList(),
+
+      // Body tabs
+      body: TabBarView(controller: _tabController, children: const [
+        AccountList(),
+        Icon(Icons.anchor),
+      ]),
+
+      // FAB
+      floatingActionButton: _currentIndex == _TabsIndex.accounts.index
+          ? FloatingActionButton(
+              child: const Icon(Mdi.accountPlus),
+              onPressed: () => _handleDialogAddAccount(context))
+          : null,
+
+      // Tab navigation
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _currentIndex,
         items: const [
           BottomNavigationBarItem(
               icon: Icon(Icons.account_circle_rounded), label: 'Comptes'),
-          BottomNavigationBarItem(icon: Icon(Icons.anchor), label: 'Bières')
+          BottomNavigationBarItem(icon: Icon(Icons.anchor), label: 'Bières'),
         ],
+        onTap: _tabController.animateTo,
       ),
     );
   }
