@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:sbeereck_app/data/models.dart';
+import 'package:sbeereck_app/data/model/account.dart';
 
 class AccountCreationForm extends StatefulWidget {
   const AccountCreationForm({Key? key}) : super(key: key);
@@ -45,7 +45,8 @@ class _AccountCreationFormState extends State<AccountCreationForm> {
             // School
             FormBuilderChoiceChip(
               name: 'school',
-              decoration: InputDecoration(labelText: i10n.accountSchool, border: InputBorder.none),
+              decoration: InputDecoration(
+                  labelText: i10n.accountSchool, border: InputBorder.none),
               spacing: 5,
               options: [
                 FormBuilderFieldOption(

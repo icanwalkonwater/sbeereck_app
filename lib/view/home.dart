@@ -52,7 +52,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           Consumer<ThemeModel>(
               builder: (ctx, model, w) => IconButton(
                   icon: const Icon(Mdi.brightness6),
-                  onPressed: () => model.switchTheme())),
+                  onPressed: () async => await model.switchTheme())),
+          Consumer<AuthModel>(
+              builder: (ctx, model, w) =>
+                  IconButton(
+                    icon: const Icon(Icons.logout),
+                    onPressed: () async => await model.logout(),
+                  ))
         ],
       ),
 
@@ -75,10 +81,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         currentIndex: _currentIndex,
         items: [
           BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle_rounded),
+              icon: const Icon(Icons.account_circle_rounded),
               label: i10n.pageAccount),
           BottomNavigationBarItem(
-              icon: Icon(Icons.anchor), label: i10n.pageBeers),
+              icon: const Icon(Icons.anchor), label: i10n.pageBeers),
         ],
         onTap: _tabController.animateTo,
       ),

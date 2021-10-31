@@ -21,12 +21,12 @@ class _LoginPageState extends State<LoginPage> {
   Future<User?>? _credentials;
 
   _LoginPageState() {
-    if (_google.currentUser != null) {
+    /*if (_google.currentUser != null) {
       // If the currentUser is already there, calling this should be instantaneous.
       setState(() {
         _credentials = _signInWithGoogleNative();
       });
-    }
+    }*/
   }
 
   Future<User?> _signInWithGoogleNative() async {
