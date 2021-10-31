@@ -25,12 +25,14 @@ class CustomerAccount {
             id: id,
             firstName: raw['firstName'],
             lastName: raw['lastName'],
-            school: CustomerSchool.values[raw['school']],
+            school: raw.containsKey('school')
+                ? CustomerSchool.values[raw['school']]
+                : null,
             isMember: raw['isMember'],
             balance: raw['balance'],
             stats: CustomerStat(
-              quantityDrank: raw['statRegularCount'],
-              totalMoney: raw['statSpecialCount'],
+              quantityDrank: raw['stats']['quantityDrank'],
+              totalMoney: raw['stats']['totalMoney'],
             ));
 
   Map<String, dynamic> toJson() => {
@@ -47,9 +49,11 @@ class CustomerAccount {
       'CustomerAccount{id=$id, firstName=$firstName, lastName=$lastName, school=$school, isMember=$isMember, balance=$balance, stats=$stats}';
 }
 
+// @formatter:off
 enum CustomerSchool {
-  Ensimag, E3, Phelma, Papet, GI, Polytech, Esisar, IAE, UGA, Unknown,
+  ensimag, phelma, e3, papet, gi, polytech, esisar, iae, uga, unknown,
 }
+// @formatter:on
 
 class CustomerStat {
   final int quantityDrank;
@@ -63,7 +67,8 @@ class CustomerStat {
       };
 
   @override
-  String toString() => 'CustomerStats{quantityDrank=$quantityDrank, totalMoney=$totalMoney}';
+  String toString() =>
+      'CustomerStats{quantityDrank=$quantityDrank, totalMoney=$totalMoney}';
 }
 
 class NewAccount {
@@ -71,13 +76,15 @@ class NewAccount {
   final String lastName;
   final CustomerSchool? school;
 
-  const NewAccount({required this.firstName, required this.lastName, this.school});
+  const NewAccount(
+      {required this.firstName, required this.lastName, this.school});
 
   Map<String, dynamic> toJson() => {
         'firstName': firstName,
         'lastName': lastName,
-        'school': school?.index ?? CustomerSchool.Unknown.index,
-        'isMember': false,
+        'school': school?.index ?? CustomerSchool.unknown.index,
+        'isMember': true,
+        'balance': 0,
         'stats': const CustomerStat(quantityDrank: 0, totalMoney: 0).toJson(),
       };
 }

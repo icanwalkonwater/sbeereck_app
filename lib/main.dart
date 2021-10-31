@@ -22,12 +22,11 @@ void main() async {
 
   await Firebase.initializeApp();
 
+  final themeModel = ThemeModel();
+  await themeModel.init();
+
   runApp(MultiProvider(providers: [
-    ChangeNotifierProvider(create: (ctx) {
-      final model = ThemeModel();
-      model.init();
-      return model;
-    }),
+    ChangeNotifierProvider.value(value: themeModel),
     ChangeNotifierProvider(create: (ctx) => AuthModel()),
     ChangeNotifierProvider(create: (ctx) => FirestoreDataModel()),
   ], child: const SbeereckApp()));

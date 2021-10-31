@@ -10,5 +10,8 @@
   "accountIsMember": "Membre?",
   "accountBalance": "Solde",
 
-  "formAccountCreationName": "Créer Compte"
+  "formAccountCreationName": "Créer Compte",
+  "fromAccountCreationDone": "Compte créé !",
+
+  "schoolUnknown": "Iconnue"
 }

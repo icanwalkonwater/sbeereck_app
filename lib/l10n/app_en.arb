@@ -12,7 +12,16 @@
   "accountBalance": "Balance",
 
   "formAccountCreationName": "New Account",
+  "fromAccountCreationDone": "Account created !",
 
   "schoolEnsimag": "Ensimag",
-  "schoolPhelma": "Phelma"
+  "schoolPhelma": "Phelma",
+  "schoolE3": "E3",
+  "schoolPapet": "Papet",
+  "schoolGi": "GI",
+  "schoolPolytech": "Polytech",
+  "schoolEsisar": "Esisar",
+  "schoolIae": "IAE",
+  "schoolUga": "UGA",
+  "schoolUnknown": "Unknown"
 }
