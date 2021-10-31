@@ -1,0 +1,14 @@
+{
+  "genericError": "Une erreur est survenue",
+
+  "pageAccount": "Comptes",
+  "pageBeers": "Bières",
+
+  "accountLastName": "Nom",
+  "accountFirstName": "Prénom",
+  "accountSchool": "Ecole",
+  "accountIsMember": "Membre?",
+  "accountBalance": "Solde",
+
+  "formAccountCreationName": "Créer Compte"
+}

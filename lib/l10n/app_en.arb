@@ -1,0 +1,18 @@
+{
+  "appName": "S'Beer Eck",
+  "genericError": "An error has occurred",
+
+  "pageAccount": "Accounts",
+  "pageBeers": "Beers",
+
+  "accountLastName": "Last Name",
+  "accountFirstName": "First Name",
+  "accountSchool": "School",
+  "accountIsMember": "Member?",
+  "accountBalance": "Balance",
+
+  "formAccountCreationName": "New Account",
+
+  "schoolEnsimag": "Ensimag",
+  "schoolPhelma": "Phelma"
+}

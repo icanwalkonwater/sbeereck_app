@@ -2,6 +2,9 @@ import 'dart:developer';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:provider/provider.dart';
 
 import 'data/providers.dart';
@@ -31,15 +34,23 @@ class _FirebaseWaitReadyAppState extends State<FirebaseWaitReadyApp> {
   @override
   Widget build(BuildContext context) {
     final theme = context.select((ThemeModel theme) => theme.theme);
+
     return MaterialApp(
         title: "S'Beer Eck",
         theme: ThemeData(brightness: theme),
+        supportedLocales: const [Locale('fr'), Locale('en')],
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          FormBuilderLocalizations.delegate
+        ],
         home: FutureBuilder(
           future: _initialisation,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               log('Firebase Error', error: snapshot.error);
-              return const Text('An error has occurred');
+              return const Text('Firebase Error, see console');
             }
 
             if (snapshot.connectionState == ConnectionState.done) {

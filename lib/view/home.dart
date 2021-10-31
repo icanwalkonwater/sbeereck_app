@@ -1,6 +1,5 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mdi/mdi.dart';
 import 'package:provider/provider.dart';
 import 'package:sbeereck_app/data/providers.dart';
@@ -44,10 +43,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    final i10n = AppLocalizations.of(context)!;
     return Scaffold(
       // Top bar
       appBar: AppBar(
-        title: const Text("S'Beer Eck"),
+        title: Text(i10n.appName),
         actions: [
           Consumer<ThemeModel>(
               builder: (ctx, model, w) => IconButton(
@@ -73,10 +73,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle_rounded), label: 'Comptes'),
-          BottomNavigationBarItem(icon: Icon(Icons.anchor), label: 'Bières'),
+              icon: Icon(Icons.account_circle_rounded),
+              label: i10n.pageAccount),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.anchor), label: i10n.pageBeers),
         ],
         onTap: _tabController.animateTo,
       ),
