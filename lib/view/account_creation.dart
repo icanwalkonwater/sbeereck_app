@@ -25,7 +25,7 @@ class _AccountCreationFormState extends State<AccountCreationForm> {
     final i10n = AppLocalizations.of(context)!;
 
     final raw = _formKey.currentState!.value;
-    final account = NewAccount(
+    final account = NewCustomerAccount(
         firstName: raw['first_name'],
         lastName: raw['last_name'],
         school: raw['school']);

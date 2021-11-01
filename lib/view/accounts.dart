@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:routemaster/routemaster.dart';
 import 'package:sbeereck_app/data/providers.dart';
 
 final _moneyFormat = NumberFormat.currency(symbol: '€', decimalDigits: 2);
@@ -9,14 +10,21 @@ final _moneyFormat = NumberFormat.currency(symbol: '€', decimalDigits: 2);
 class AccountList extends StatelessWidget {
   const AccountList({Key? key}) : super(key: key);
 
-  List<DataRow> _buildRows(FirestoreDataModel model) {
-    return model.accounts
-        .map((account) => DataRow(key: ValueKey(account.id), cells: [
-              DataCell(Text(account.firstName)),
+  List<DataRow> _buildRows(BuildContext ctx, FirestoreDataModel model) {
+    final sorted = model.accounts.toList(growable: false);
+    sorted.sort((a, b) => a.lastName.compareTo(b.lastName));
+
+    return sorted
+        .map((account) => DataRow(
+            key: ValueKey(account.id),
+            cells: [
               DataCell(Text(account.lastName)),
+              DataCell(Text(account.firstName)),
               DataCell(Checkbox(value: account.isMember, onChanged: null)),
               DataCell(Text(_moneyFormat.format(account.balance))),
-            ]))
+            ],
+            onSelectChanged: (_) =>
+                Routemaster.of(ctx).push('/account/${account.id}')))
         .toList(growable: false);
   }
 
@@ -33,7 +41,8 @@ class AccountList extends StatelessWidget {
               DataColumn(label: Text(i10n.accountIsMember)),
               DataColumn(label: Text(i10n.accountBalance)),
             ],
-            rows: _buildRows(model),
+            rows: _buildRows(context, model),
+            showCheckboxColumn: false,
           ),
         ),
       ),

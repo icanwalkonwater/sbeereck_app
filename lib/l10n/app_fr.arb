@@ -13,5 +13,9 @@
   "formAccountCreationName": "Créer Compte",
   "fromAccountCreationDone": "Compte créé !",
 
-  "schoolUnknown": "Iconnue"
+  "schoolUnknown": "Inconnue",
+
+  "accountDetailTitle": "Details du compte",
+  "accountDetailActionEdit": "Editer",
+  "accountDetailActionCollect": "Encaisser"
 }

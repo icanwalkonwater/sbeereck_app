@@ -23,5 +23,9 @@
   "schoolEsisar": "Esisar",
   "schoolIae": "IAE",
   "schoolUga": "UGA",
-  "schoolUnknown": "Unknown"
+  "schoolUnknown": "Unknown",
+
+  "accountDetailTitle": "Account Details",
+  "accountDetailActionEdit": "Edit",
+  "accountDetailActionCollect": "Cash In"
 }

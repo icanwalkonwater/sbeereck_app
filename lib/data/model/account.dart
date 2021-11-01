@@ -3,7 +3,7 @@ class CustomerAccount {
   final String id;
   final String firstName;
   final String lastName;
-  final CustomerSchool? school;
+  final CustomerSchool school;
   final bool isMember;
   final num balance;
   final CustomerStat stats;
@@ -12,7 +12,7 @@ class CustomerAccount {
     required this.id,
     required this.firstName,
     required this.lastName,
-    this.school,
+    required this.school,
     required this.isMember,
     required this.balance,
     required this.stats,
@@ -27,7 +27,7 @@ class CustomerAccount {
             lastName: raw['lastName'],
             school: raw.containsKey('school')
                 ? CustomerSchool.values[raw['school']]
-                : null,
+                : CustomerSchool.unknown,
             isMember: raw['isMember'],
             balance: raw['balance'],
             stats: CustomerStat(
@@ -38,7 +38,7 @@ class CustomerAccount {
   Map<String, dynamic> toJson() => {
         'firstName': firstName,
         'lastName': lastName,
-        if (school != null) 'school': school!.index,
+        if (school != CustomerSchool.unknown) 'school': school.index,
         'isMember': isMember,
         'balance': balance,
         'stats': stats.toJson(),
@@ -54,6 +54,32 @@ enum CustomerSchool {
   ensimag, phelma, e3, papet, gi, polytech, esisar, iae, uga, unknown,
 }
 // @formatter:on
+
+extension SchoolData on CustomerSchool {
+  String assetLogo() {
+    switch (this) {
+      case CustomerSchool.ensimag:
+        return 'assets/schools/ensimag.png';
+      case CustomerSchool.phelma:
+        return 'assets/schools/phelma.png';
+      case CustomerSchool.e3:
+        return 'assets/schools/e3.png';
+      case CustomerSchool.papet:
+        return 'assets/schools/papet.png';
+      case CustomerSchool.gi:
+        return 'assets/schools/gi.png';
+      case CustomerSchool.polytech:
+        return 'assets/schools/polytech.png';
+      case CustomerSchool.esisar:
+        return 'assets/schools/esisar.png';
+      case CustomerSchool.iae:
+        return 'assets/schools/iae.png';
+      case CustomerSchool.uga:
+      case CustomerSchool.unknown:
+        return 'assets/schools/uga.png';
+    }
+  }
+}
 
 class CustomerStat {
   final int quantityDrank;
@@ -71,12 +97,12 @@ class CustomerStat {
       'CustomerStats{quantityDrank=$quantityDrank, totalMoney=$totalMoney}';
 }
 
-class NewAccount {
+class NewCustomerAccount {
   final String firstName;
   final String lastName;
   final CustomerSchool? school;
 
-  const NewAccount(
+  const NewCustomerAccount(
       {required this.firstName, required this.lastName, this.school});
 
   Map<String, dynamic> toJson() => {

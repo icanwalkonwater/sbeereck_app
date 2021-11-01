@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Beer {
   final String id;
   final bool available;
@@ -15,7 +17,7 @@ class Beer {
           id: id,
           available: raw['available'],
           name: raw['name'],
-          typeRef: raw['type'],
+          typeRef: (raw['type'] as DocumentReference).id,
         );
 
   Map<String, dynamic> toJson() => {
