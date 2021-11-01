@@ -107,6 +107,8 @@ class CustomerStat {
   final int quantityDrank;
   final int totalMoney;
 
+  num get totalMoneyReal => totalMoney.toDouble() / 100.0;
+
   const CustomerStat({required this.quantityDrank, required this.totalMoney});
 
   Map<String, dynamic> toJson() => {

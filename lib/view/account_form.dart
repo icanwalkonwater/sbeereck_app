@@ -73,7 +73,7 @@ class _AccountDetailsFormState extends State<AccountDetailsForm> {
               decoration: InputDecoration(
                   labelText: i10n.accountSchool, border: InputBorder.none),
               spacing: 3,
-              runSpacing: -5,
+              runSpacing: 0,
               options: [
                 FormBuilderFieldOption(
                   value: CustomerSchool.ensimag,

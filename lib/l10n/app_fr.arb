@@ -31,5 +31,11 @@
   "accountRechargeTitle": "Recharger le compte",
   "accountRechargeField": "Montant (€)",
 
-  "accountMakeMemberTitle": "Faire membre ?"
+  "accountMakeMemberTitle": "Faire membre ?",
+
+  "accountStatsTitle": "Statistiques",
+  "accountStatsDrinkTotal": "Bu au total",
+  "accountStatsDrinkToday": "Bu aujourd'hui",
+  "accountStatsSpentTotal": "Dépensé au total",
+  "accountStatsSpentToday": "Dépensé aujourd'hui"
 }

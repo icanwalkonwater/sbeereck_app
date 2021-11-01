@@ -168,6 +168,10 @@ class _AccountDetail extends StatelessWidget {
           child: _buildNotMember(context,
               onMakeMember: () => _onMakeMember(context)),
         ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: _buildStats(context, account),
+      ),
     ]);
   }
 }
@@ -324,5 +328,77 @@ Widget _buildAction(IconData icon, String label, VoidCallback cb,
         Text(label),
       ]),
     ),
+  );
+}
+
+Widget _buildStats(BuildContext context, CustomerAccount account) {
+  final formatterQty = NumberFormat('#.0 L');
+  final formatterMoney = NumberFormat.currency(symbol: '€');
+  final theme = Theme.of(context);
+
+  final l10n = AppLocalizations.of(context)!;
+
+  return Card(
+    elevation: 2.0,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.accountStatsTitle, style: theme.textTheme.headline6),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatModule(context,
+                      icon: Mdi.beer,
+                      value: formatterQty.format(account.stats.quantityDrank),
+                      label: l10n.accountStatsDrinkTotal),
+                  _buildStatModule(context,
+                      icon: Mdi.beerOutline,
+                      value: 'XX.X L',
+                      label: l10n.accountStatsDrinkToday),
+                ]),
+          ),
+          const Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatModule(context,
+                      icon: Mdi.piggyBank,
+                      value:
+                          formatterMoney.format(account.stats.totalMoneyReal),
+                      label: l10n.accountStatsSpentTotal),
+                  _buildStatModule(context,
+                      icon: Mdi.piggyBankOutline,
+                      value: 'XX €',
+                      label: l10n.accountStatsSpentToday),
+                ]),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildStatModule(BuildContext context,
+    {required IconData icon, required String value, required String label}) {
+  final theme = Theme.of(context);
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      Row(
+        children: [
+          Icon(icon, size: 32.0),
+          Text(value, style: theme.textTheme.headline5),
+        ],
+      ),
+      const SizedBox(height: 4.0),
+      Text(label),
+    ],
   );
 }

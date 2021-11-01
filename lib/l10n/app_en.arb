@@ -41,5 +41,11 @@
   "accountRechargeTitle": "Recharge account",
   "accountRechargeField": "Amount (€)",
 
-  "accountMakeMemberTitle": "Make member ?"
+  "accountMakeMemberTitle": "Make member ?",
+
+  "accountStatsTitle": "Statistics",
+  "accountStatsDrinkTotal": "Drank all-time",
+  "accountStatsDrinkToday": "Drank today",
+  "accountStatsSpentTotal": "Spent all-time",
+  "accountStatsSpentToday": "Spent today"
 }
