@@ -4,6 +4,8 @@
   "pageAccount": "Comptes",
   "pageBeers": "Bières",
 
+  "searchBarHint": "Chercher",
+
   "accountLastName": "Nom",
   "accountFirstName": "Prénom",
   "accountSchool": "Ecole",

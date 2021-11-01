@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -7,18 +9,54 @@ import 'package:sbeereck_app/data/providers.dart';
 
 final _moneyFormat = NumberFormat.currency(symbol: '€', decimalDigits: 2);
 
-class AccountList extends StatelessWidget {
+class AccountList extends StatefulWidget {
   const AccountList({Key? key}) : super(key: key);
 
+  @override
+  State<AccountList> createState() => _AccountListState();
+}
+
+class _AccountListState extends State<AccountList> {
+  static const _debounceTime = Duration(milliseconds: 200);
+  Timer? _debounce;
+  var _searchTerm = '';
+
   List<DataRow> _buildRows(BuildContext ctx, FirestoreDataModel model) {
-    final sorted = model.accounts.toList(growable: false);
+    // For an account to show it needs to contains every non-empty search term in its first/last name or school
+
+    // Prepare terms
+    final searchTerms = _searchTerm.toLowerCase().split(' ');
+    searchTerms.removeWhere((element) => element.isEmpty);
+
+    // Remove non valid terms
+    final sorted = searchTerms.isNotEmpty
+        ? model.accounts.where((account) {
+            final query = searchTerms.toList();
+
+            for (var candidate in [
+              account.firstName.toLowerCase(),
+              account.lastName.toLowerCase(),
+              account.school.toString().toLowerCase(),
+            ]) {
+              query.removeWhere((term) => candidate.contains(term));
+            }
+
+            // If the query is empty, every search term is there
+            return query.isEmpty;
+          }).toList(growable: false)
+        : model.accounts.toList(growable: false);
+
     sorted.sort((a, b) => a.lastName.compareTo(b.lastName));
 
+    final colorPoor = MaterialStateProperty.all(Theme.of(context).errorColor);
     return sorted
         .map((account) => DataRow(
             key: ValueKey(account.id),
+            color: account.isVeryPoor ? colorPoor : null,
             cells: [
-              DataCell(Text(account.lastName)),
+              DataCell(Text(
+                account.lastName,
+              )),
               DataCell(Text(account.firstName)),
               DataCell(Checkbox(value: account.isMember, onChanged: null)),
               DataCell(Text(_moneyFormat.format(account.balanceReal))),
@@ -28,24 +66,48 @@ class AccountList extends StatelessWidget {
         .toList(growable: false);
   }
 
+  void _onSearchInput(String val) {
+    if (_debounce?.isActive ?? false) {
+      _debounce!.cancel();
+    }
+
+    _debounce = Timer(_debounceTime, () => setState(() => _searchTerm = val));
+  }
+
   @override
   Widget build(BuildContext context) {
     final i10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      child: FittedBox(
-        child: Consumer<FirestoreDataModel>(
-          builder: (ctx, model, w) => DataTable(
-            columns: [
-              DataColumn(label: Text(i10n.accountLastName)),
-              DataColumn(label: Text(i10n.accountFirstName)),
-              DataColumn(label: Text(i10n.accountIsMember)),
-              DataColumn(label: Text(i10n.accountBalance)),
-            ],
-            rows: _buildRows(context, model),
-            showCheckboxColumn: false,
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
+          child: TextField(
+            onChanged: _onSearchInput,
+            decoration: InputDecoration(
+              labelText: i10n.searchBarHint,
+            ),
           ),
         ),
-      ),
+        Expanded(
+          child: SingleChildScrollView(
+            child: FittedBox(
+              child: Consumer<FirestoreDataModel>(
+                builder: (ctx, model, w) => DataTable(
+                  columns: [
+                    DataColumn(label: Text(i10n.accountLastName)),
+                    DataColumn(label: Text(i10n.accountFirstName)),
+                    DataColumn(label: Text(i10n.accountIsMember)),
+                    DataColumn(label: Text(i10n.accountBalance)),
+                  ],
+                  rows: _buildRows(context, model),
+                  showCheckboxColumn: false,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

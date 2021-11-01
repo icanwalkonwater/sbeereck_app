@@ -13,6 +13,8 @@ class CustomerAccount {
 
   bool get isPoor => balance <= 0;
 
+  bool get isVeryPoor => balance < 0;
+
   const CustomerAccount({
     required this.id,
     required this.firstName,

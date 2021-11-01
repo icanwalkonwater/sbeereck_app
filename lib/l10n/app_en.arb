@@ -5,6 +5,8 @@
   "pageAccount": "Accounts",
   "pageBeers": "Beers",
 
+  "searchBarHint": "Search here",
+
   "accountLastName": "Last Name",
   "accountFirstName": "First Name",
   "accountSchool": "School",
