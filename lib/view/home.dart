@@ -3,7 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mdi/mdi.dart';
 import 'package:provider/provider.dart';
 import 'package:sbeereck_app/data/providers.dart';
-import 'package:sbeereck_app/view/account_creation.dart';
+import 'package:sbeereck_app/view/account_form.dart';
 import 'package:sbeereck_app/view/accounts.dart';
 
 class HomePage extends StatefulWidget {
@@ -38,7 +38,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         context: context,
         useRootNavigator: false,
         barrierDismissible: false,
-        builder: (ctx) => const AccountCreationForm());
+        builder: (ctx) => AccountDetailsForm(
+            onSubmit: (context, account) =>
+                context.read<FirestoreDataModel>().newAccount(account)));
   }
 
   @override
@@ -54,8 +56,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   icon: const Icon(Mdi.brightness6),
                   onPressed: () async => await model.switchTheme())),
           Consumer<AuthModel>(
-              builder: (ctx, model, w) =>
-                  IconButton(
+              builder: (ctx, model, w) => IconButton(
                     icon: const Icon(Icons.logout),
                     onPressed: () async => await model.logout(),
                   ))

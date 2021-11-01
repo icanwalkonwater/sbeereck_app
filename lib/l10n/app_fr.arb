@@ -11,11 +11,23 @@
   "accountBalance": "Solde",
 
   "formAccountCreationName": "Créer Compte",
-  "fromAccountCreationDone": "Compte créé !",
 
   "schoolUnknown": "Inconnue",
 
   "accountDetailTitle": "Details du compte",
+  "accountDetailRecharge": "Cliquez pour recharger",
+  "accountDetailActionCollect": "Encaisser",
   "accountDetailActionEdit": "Editer",
-  "accountDetailActionCollect": "Encaisser"
+  "accountDetailActionDelete": "Supprimer",
+  "accountDetailNotMemberTitle": "Non Membre",
+  "accountDetailNotMemberHint": "Cliquez pour en faire un membre",
+
+  "accountDeleteConfirmTitle": "Etes vous vraiment sur de supprimer ce compte ?",
+  "accountDeleteConfirmTitle2": "Vraiment ????",
+  "accountDeleteConfirmOk2": "OUI !",
+
+  "accountRechargeTitle": "Recharger le compte",
+  "accountRechargeField": "Montant (€)",
+
+  "accountMakeMemberTitle": "Faire membre ?"
 }

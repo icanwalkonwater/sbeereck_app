@@ -5,8 +5,13 @@ class CustomerAccount {
   final String lastName;
   final CustomerSchool school;
   final bool isMember;
-  final num balance;
+  final int balance;
   final CustomerStat stats;
+
+  // Fixed point decimal
+  num get balanceReal => balance.toDouble() / 100.0;
+
+  bool get isPoor => balance <= 0;
 
   const CustomerAccount({
     required this.id,
@@ -17,6 +22,15 @@ class CustomerAccount {
     required this.balance,
     required this.stats,
   });
+
+  static const dummy = CustomerAccount(
+      id: '0',
+      firstName: 'John',
+      lastName: 'Doe',
+      school: CustomerSchool.unknown,
+      isMember: false,
+      balance: 0,
+      stats: CustomerStat(quantityDrank: 0, totalMoney: 0));
 
   // Conversion methods from and to documents
 
@@ -43,6 +57,12 @@ class CustomerAccount {
         'balance': balance,
         'stats': stats.toJson(),
       };
+
+  Map<String, dynamic> toJsonEditable() => {
+    'firstName': firstName,
+    'lastName': lastName,
+    'school': school,
+  };
 
   @override
   String toString() =>
@@ -105,7 +125,7 @@ class NewCustomerAccount {
   const NewCustomerAccount(
       {required this.firstName, required this.lastName, this.school});
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJsonFull() => {
         'firstName': firstName,
         'lastName': lastName,
         'school': school?.index ?? CustomerSchool.unknown.index,
@@ -113,4 +133,10 @@ class NewCustomerAccount {
         'balance': 0,
         'stats': const CustomerStat(quantityDrank: 0, totalMoney: 0).toJson(),
       };
+
+  Map<String, dynamic> toJsonLight() => {
+    'firstName': firstName,
+    'lastName': lastName,
+    'school': school?.index ?? CustomerSchool.unknown.index,
+  };
 }

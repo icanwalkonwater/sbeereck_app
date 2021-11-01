@@ -21,7 +21,7 @@ class AccountList extends StatelessWidget {
               DataCell(Text(account.lastName)),
               DataCell(Text(account.firstName)),
               DataCell(Checkbox(value: account.isMember, onChanged: null)),
-              DataCell(Text(_moneyFormat.format(account.balance))),
+              DataCell(Text(_moneyFormat.format(account.balanceReal))),
             ],
             onSelectChanged: (_) =>
                 Routemaster.of(ctx).push('/account/${account.id}')))

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import '../models.dart';
 
+const _accountsCol = 'accounts';
+
 class FirestoreDataModel extends ChangeNotifier {
   final List<CustomerAccount> _accounts = [];
   final List<BeerType> _beerTypes = [];
@@ -22,7 +24,7 @@ class FirestoreDataModel extends ChangeNotifier {
   FirestoreDataModel() {
     // Setup accounts stream
     FirebaseFirestore.instance
-        .collection('accounts')
+        .collection(_accountsCol)
         .withConverter<CustomerAccount>(
             fromFirestore: (snapshot, _) =>
                 CustomerAccount.fromJson(snapshot.id, snapshot.data()!),
@@ -38,14 +40,15 @@ class FirestoreDataModel extends ChangeNotifier {
             fromFirestore: (s, _) => BeerType.fromJson(s.id, s.data()!),
             toFirestore: (t, _) => {})
         .get()
-        .then((snapshot) => _beerTypes.addAll(snapshot.docs.map((doc) => doc.data())));
+        .then((snapshot) =>
+            _beerTypes.addAll(snapshot.docs.map((doc) => doc.data())));
 
     // Setup beer stream
     FirebaseFirestore.instance
         .collection('beers')
         .withConverter<Beer>(
-        fromFirestore: (s, _) => Beer.fromJson(s.id, s.data()!),
-        toFirestore: (b, _) => b.toJson())
+            fromFirestore: (s, _) => Beer.fromJson(s.id, s.data()!),
+            toFirestore: (b, _) => b.toJson())
         .snapshots()
         .listen(handleChangesFactory<Beer>(_beers), onError: logError);
   }
@@ -70,12 +73,40 @@ class FirestoreDataModel extends ChangeNotifier {
   }
 
 // </editor-fold>
-  
-  CustomerAccount accountById(String id) => _accounts.firstWhere((acc) => acc.id == id);
+
+  CustomerAccount accountById(String id) {
+    return _accounts.firstWhere((acc) => acc.id == id,
+        orElse: () => CustomerAccount.dummy);
+  }
 
   Future<void> newAccount(NewCustomerAccount account) async {
     await FirebaseFirestore.instance
-        .collection('accounts')
-        .add(account.toJson());
+        .collection(_accountsCol)
+        .add(account.toJsonFull());
+  }
+
+  Future<void> editAccount(String id, NewCustomerAccount account) async {
+    await FirebaseFirestore.instance
+        .collection(_accountsCol)
+        .doc(id)
+        .update(account.toJsonLight());
+  }
+
+  Future<void> makeAccountMember(String id) async {
+    await FirebaseFirestore.instance
+        .collection(_accountsCol)
+        .doc(id)
+        .update({'isMember': true});
+  }
+
+  Future<void> rechargeAccount(String id, int newBalance) async {
+    await FirebaseFirestore.instance
+        .collection(_accountsCol)
+        .doc(id)
+        .update({'balance': newBalance});
+  }
+
+  Future<void> deleteAccount(String id) async {
+    await FirebaseFirestore.instance.collection(_accountsCol).doc(id).delete();
   }
 }

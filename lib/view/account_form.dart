@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:provider/provider.dart';
 import 'package:sbeereck_app/data/models.dart';
-import 'package:sbeereck_app/data/provider/firestore.dart';
 
-class AccountCreationForm extends StatefulWidget {
-  const AccountCreationForm({Key? key}) : super(key: key);
+class AccountDetailsForm extends StatefulWidget {
+  final void Function(BuildContext, NewCustomerAccount) onSubmit;
+  final Map<String, dynamic>? initialValues;
+
+  const AccountDetailsForm(
+      {Key? key, required this.onSubmit, this.initialValues})
+      : super(key: key);
 
   @override
-  State<AccountCreationForm> createState() => _AccountCreationFormState();
+  State<AccountDetailsForm> createState() => _AccountDetailsFormState();
 }
 
-class _AccountCreationFormState extends State<AccountCreationForm> {
+class _AccountDetailsFormState extends State<AccountDetailsForm> {
   final _formKey = GlobalKey<FormBuilderState>();
   var _lockForm = false;
 
@@ -22,19 +25,15 @@ class _AccountCreationFormState extends State<AccountCreationForm> {
       _lockForm = true;
     });
 
-    final i10n = AppLocalizations.of(context)!;
-
     final raw = _formKey.currentState!.value;
     final account = NewCustomerAccount(
-        firstName: raw['first_name'],
-        lastName: raw['last_name'],
+        firstName: raw['firstName'],
+        lastName: raw['lastName'],
         school: raw['school']);
 
-    context.read<FirestoreDataModel>().newAccount(account).then((value) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(i10n.fromAccountCreationDone)));
-      Navigator.pop(context);
-    });
+    // Trigger listener
+    Navigator.pop(context);
+    widget.onSubmit(context, account);
   }
 
   @override
@@ -48,12 +47,13 @@ class _AccountCreationFormState extends State<AccountCreationForm> {
       content: FormBuilder(
         key: _formKey,
         enabled: !_lockForm,
+        initialValue: widget.initialValues ?? {},
         autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           children: [
             // Last name
             FormBuilderTextField(
-              name: 'first_name',
+              name: 'firstName',
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(labelText: i10n.accountFirstName),
               validator: FormBuilderValidators.required(context),
@@ -61,7 +61,7 @@ class _AccountCreationFormState extends State<AccountCreationForm> {
 
             // First name
             FormBuilderTextField(
-              name: 'last_name',
+              name: 'lastName',
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(labelText: i10n.accountLastName),
               validator: FormBuilderValidators.required(context),

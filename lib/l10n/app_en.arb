@@ -12,7 +12,6 @@
   "accountBalance": "Balance",
 
   "formAccountCreationName": "New Account",
-  "fromAccountCreationDone": "Account created !",
 
   "schoolEnsimag": "Ensimag",
   "schoolPhelma": "Phelma",
@@ -26,6 +25,19 @@
   "schoolUnknown": "Unknown",
 
   "accountDetailTitle": "Account Details",
+  "accountDetailRecharge": "Click to recharge",
+  "accountDetailActionCollect": "Cash In",
   "accountDetailActionEdit": "Edit",
-  "accountDetailActionCollect": "Cash In"
+  "accountDetailActionDelete": "Delete",
+  "accountDetailNotMemberTitle": "Not a Member",
+  "accountDetailNotMemberHint": "Click to make him a member",
+
+  "accountDeleteConfirmTitle": "Are you sure you want to delete this account ?",
+  "accountDeleteConfirmTitle2": "Really ????",
+  "accountDeleteConfirmOk2": "YES !",
+
+  "accountRechargeTitle": "Recharge account",
+  "accountRechargeField": "Amount (€)",
+
+  "accountMakeMemberTitle": "Make member ?"
 }
