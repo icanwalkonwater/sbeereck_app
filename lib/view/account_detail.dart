@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -53,7 +54,19 @@ class _AccountDetail extends StatelessWidget {
             }));
   }
 
-  void _onPay() {}
+  void _onPay(BuildContext context) {
+    final model = context.read<FirestoreDataModel>();
+
+    final transaction = EventTransactionDrink.blueprint(
+      beerRef: model.beers.first.asRef,
+      price: 100,
+      customerRef: account.asRef,
+      staffRef: model.currentStaff.asRef,
+      created: Timestamp.now(),
+    );
+
+    model.newTransaction(transaction);
+  }
 
   void _onEdit(BuildContext context) {
     showDialog(
@@ -158,7 +171,7 @@ class _AccountDetail extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: _buildActions(context, account,
-              onPay: _onPay,
+              onPay: () => _onPay(context),
               onEdit: () => _onEdit(context),
               onDelete: () => _onDelete(context)),
         ),

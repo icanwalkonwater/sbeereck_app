@@ -1,3 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:sbeereck_app/data/provider/firestore.dart';
+
 /// Represent a single account straight from firestore
 class CustomerAccount {
   final String id;
@@ -34,6 +37,10 @@ class CustomerAccount {
       balance: 0,
       stats: CustomerStat(quantityDrank: 0, totalMoney: 0));
 
+  DocumentReference<CustomerAccount> get asRef => FirebaseFirestore.instance
+      .doc('${FirestoreDataModel.accountsCol}/$id')
+      .withCustomerAccountConverter();
+
   // Conversion methods from and to documents
 
   CustomerAccount.fromJson(String id, Map<String, dynamic> raw)
@@ -61,14 +68,28 @@ class CustomerAccount {
       };
 
   Map<String, dynamic> toJsonEditable() => {
-    'firstName': firstName,
-    'lastName': lastName,
-    'school': school,
-  };
+        'firstName': firstName,
+        'lastName': lastName,
+        'school': school,
+      };
 
   @override
   String toString() =>
       'CustomerAccount{id=$id, firstName=$firstName, lastName=$lastName, school=$school, isMember=$isMember, balance=$balance, stats=$stats}';
+}
+
+extension CustomerAccountConverter<T> on DocumentReference<T> {
+  DocumentReference<CustomerAccount> withCustomerAccountConverter() => withConverter(
+    fromFirestore: (snapshot, _) => CustomerAccount.fromJson(snapshot.id, snapshot.data()!),
+    toFirestore: (account, _) => account.toJson(),
+  );
+}
+
+extension CustomerAccountConverterQ<T> on Query<T> {
+  Query<CustomerAccount> withCustomerAccountConverter() => withConverter(
+    fromFirestore: (snapshot, _) => CustomerAccount.fromJson(snapshot.id, snapshot.data()!),
+    toFirestore: (account, _) => account.toJson(),
+  );
 }
 
 // @formatter:off
@@ -139,8 +160,8 @@ class NewCustomerAccount {
       };
 
   Map<String, dynamic> toJsonLight() => {
-    'firstName': firstName,
-    'lastName': lastName,
-    'school': school?.index ?? CustomerSchool.unknown.index,
-  };
+        'firstName': firstName,
+        'lastName': lastName,
+        'school': school?.index ?? CustomerSchool.unknown.index,
+      };
 }

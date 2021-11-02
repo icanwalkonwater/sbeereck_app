@@ -1,16 +1,35 @@
+import 'dart:async';
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:sbeereck_app/data/model/staff.dart';
 
 import '../models.dart';
 
-const _accountsCol = 'accounts';
+export 'firestore/actions.dart';
+
+const optionFromCache = GetOptions(source: Source.cache);
 
 class FirestoreDataModel extends ChangeNotifier {
+  static const accountsCol = 'accounts';
+  static const beerTypesCol = 'beerTypes';
+  static const beersCol = 'beers';
+  static const eventsCol = 'events';
+  static const transactionsCol = 'transactions';
+  static const staffsCol = 'staffs';
+
   final List<CustomerAccount> _accounts = [];
   final List<BeerType> _beerTypes = [];
   final List<Beer> _beers = [];
+  final List<EventTransaction> _transactions = [];
+  final List<Staff> _staffs = [];
+
+  late Staff _currentStaff;
+  late final EventPeriod _currentEvent;
+  StreamSubscription<QuerySnapshot<EventTransaction>>? _transactionStream;
 
   List<CustomerAccount> get accounts => _accounts;
 
@@ -18,39 +37,92 @@ class FirestoreDataModel extends ChangeNotifier {
 
   List<Beer> get beers => _beers;
 
-  // Setup snapshot listening
-  // <editor-fold>
+  Staff get currentStaff => _currentStaff;
 
+  EventPeriod get currentEvent => _currentEvent;
+
+  // Setup snapshot listening
   FirestoreDataModel() {
     // Setup accounts stream
     FirebaseFirestore.instance
-        .collection(_accountsCol)
-        .withConverter<CustomerAccount>(
-            fromFirestore: (snapshot, _) =>
-                CustomerAccount.fromJson(snapshot.id, snapshot.data()!),
-            toFirestore: (account, _) => account.toJson())
+        .collection(accountsCol)
+        .orderBy('lastName')
+        .orderBy('firstName')
+        .withCustomerAccountConverter()
         .snapshots()
         .listen(handleChangesFactory<CustomerAccount>(_accounts),
             onError: logError);
 
     // Get beer types just one time
     FirebaseFirestore.instance
-        .collection('beerTypes')
-        .withConverter<BeerType>(
-            fromFirestore: (s, _) => BeerType.fromJson(s.id, s.data()!),
-            toFirestore: (t, _) => {})
+        .collection(beerTypesCol)
+        .withBeerTypeConverter()
         .get()
         .then((snapshot) =>
             _beerTypes.addAll(snapshot.docs.map((doc) => doc.data())));
 
     // Setup beer stream
     FirebaseFirestore.instance
-        .collection('beers')
-        .withConverter<Beer>(
-            fromFirestore: (s, _) => Beer.fromJson(s.id, s.data()!),
-            toFirestore: (b, _) => b.toJson())
+        .collection(beersCol)
+        .withBeerConverter()
         .snapshots()
         .listen(handleChangesFactory<Beer>(_beers), onError: logError);
+
+    // Get all staffs
+    FirebaseFirestore.instance
+        .collection(staffsCol)
+        .withStaffConverter()
+        .snapshots()
+        .listen(handleChangesFactory<Staff>(_staffs), onError: logError);
+
+    // Listen for current staff
+    FirebaseAuth.instance.authStateChanges().listen((user) async {
+      if (user == null) return;
+
+      _currentStaff = (await FirebaseFirestore.instance
+              .collection(staffsCol)
+              .where('mail', isEqualTo: user.email)
+              .limit(1)
+              .withStaffConverter()
+              .get())
+          .docs
+          .first
+          .data();
+    });
+
+    // Setup event & transactions
+    FirebaseFirestore.instance
+        .collection(eventsCol)
+        .orderBy('created', descending: true)
+        .limit(1)
+        .withConverter<EventPeriod>(
+            fromFirestore: (s, _) => EventPeriod.fromJson(s.id, s.data()!),
+            toFirestore: (e, _) => e.toJson())
+        .snapshots()
+        .listen((snapshot) async {
+      assert(snapshot.size == 1);
+      log('New event period started');
+      _currentEvent = snapshot.docs.first.data();
+
+      // Setup transaction stream
+      if (_transactionStream != null) {
+        await _transactionStream!.cancel();
+      }
+
+      _transactionStream = FirebaseFirestore.instance
+          .collection('$eventsCol/${_currentEvent.id}/$transactionsCol')
+          .orderBy('created', descending: true)
+          .withConverter<EventTransaction>(
+              fromFirestore: (s, _) {
+                final raw = s.data()!;
+                final type = EventTransactionType.values[raw['type']];
+                assert(type == EventTransactionType.drink);
+                return EventTransactionDrink.fromJson(s.id, raw);
+              },
+              toFirestore: (t, _) => t.toJson())
+          .snapshots()
+          .listen(handleChangesFactory(_transactions));
+    }, onError: logError);
   }
 
   void logError(dynamic err, dynamic stacktrace) =>
@@ -70,43 +142,5 @@ class FirestoreDataModel extends ChangeNotifier {
       }
       notifyListeners();
     };
-  }
-
-// </editor-fold>
-
-  CustomerAccount accountById(String id) {
-    return _accounts.firstWhere((acc) => acc.id == id,
-        orElse: () => CustomerAccount.dummy);
-  }
-
-  Future<void> newAccount(NewCustomerAccount account) async {
-    await FirebaseFirestore.instance
-        .collection(_accountsCol)
-        .add(account.toJsonFull());
-  }
-
-  Future<void> editAccount(String id, NewCustomerAccount account) async {
-    await FirebaseFirestore.instance
-        .collection(_accountsCol)
-        .doc(id)
-        .update(account.toJsonLight());
-  }
-
-  Future<void> makeAccountMember(String id) async {
-    await FirebaseFirestore.instance
-        .collection(_accountsCol)
-        .doc(id)
-        .update({'isMember': true});
-  }
-
-  Future<void> rechargeAccount(String id, int newBalance) async {
-    await FirebaseFirestore.instance
-        .collection(_accountsCol)
-        .doc(id)
-        .update({'balance': newBalance});
-  }
-
-  Future<void> deleteAccount(String id) async {
-    await FirebaseFirestore.instance.collection(_accountsCol).doc(id).delete();
   }
 }

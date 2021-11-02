@@ -46,8 +46,6 @@ class _AccountListState extends State<AccountList> {
           }).toList(growable: false)
         : model.accounts.toList(growable: false);
 
-    sorted.sort((a, b) => a.lastName.compareTo(b.lastName));
-
     final colorPoor = MaterialStateProperty.all(Theme.of(context).errorColor);
     return sorted
         .map((account) => DataRow(
