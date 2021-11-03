@@ -2,12 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:sbeereck_app/data/providers.dart';
 
-final _moneyFormat = NumberFormat.currency(symbol: '€', decimalDigits: 2);
+import '../utils.dart';
 
 class AccountList extends StatefulWidget {
   const AccountList({Key? key}) : super(key: key);
@@ -57,7 +56,7 @@ class _AccountListState extends State<AccountList> {
               )),
               DataCell(Text(account.firstName)),
               DataCell(Checkbox(value: account.isMember, onChanged: null)),
-              DataCell(Text(_moneyFormat.format(account.balanceReal))),
+              DataCell(Text(moneyFormatter.format(account.balanceReal))),
             ],
             onSelectChanged: (_) =>
                 Routemaster.of(ctx).push('/account/${account.id}')))

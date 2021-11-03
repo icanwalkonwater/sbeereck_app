@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:routemaster/routemaster.dart';
 import 'package:sbeereck_app/data/models.dart';
 import 'package:sbeereck_app/data/providers.dart';
+import 'package:sbeereck_app/utils.dart';
 import 'package:sbeereck_app/view/account_form.dart';
 
 import 'account_detail_recharge_form.dart';
@@ -49,23 +49,13 @@ class _AccountDetail extends StatelessWidget {
               context
                   .read<FirestoreDataModel>()
                   // Fixed point decimal math
-                  .rechargeAccount(
+                  .setAccountBalance(
                       account.id, account.balance + (recharge * 100).round());
             }));
   }
 
   void _onPay(BuildContext context) {
-    final model = context.read<FirestoreDataModel>();
-
-    final transaction = EventTransactionDrink.blueprint(
-      beerRef: model.beers.first.asRef,
-      price: 100,
-      customerRef: account.asRef,
-      staffRef: model.currentStaff.asRef,
-      created: Timestamp.now(),
-    );
-
-    model.newTransaction(transaction);
+    Routemaster.of(context).push('order');
   }
 
   void _onEdit(BuildContext context) {
@@ -222,7 +212,6 @@ Widget _buildHeader(BuildContext context, CustomerAccount account) {
 Widget _buildBalance(BuildContext context, CustomerAccount account,
     {required VoidCallback onRecharge}) {
   final i10n = AppLocalizations.of(context)!;
-  final formatter = NumberFormat.currency(symbol: '€');
 
   final theme = Theme.of(context);
   final color =
@@ -245,7 +234,7 @@ Widget _buildBalance(BuildContext context, CustomerAccount account,
               const SizedBox(width: 8.0),
               Center(
                   child: Text(
-                formatter.format(account.balanceReal),
+                moneyFormatter.format(account.balanceReal),
                 style: theme.textTheme.headline3?.apply(color: onColor),
               )),
             ],
@@ -346,7 +335,6 @@ Widget _buildAction(IconData icon, String label, VoidCallback cb,
 
 Widget _buildStats(BuildContext context, CustomerAccount account) {
   final formatterQty = NumberFormat('#.0 L');
-  final formatterMoney = NumberFormat.currency(symbol: '€');
   final theme = Theme.of(context);
 
   final l10n = AppLocalizations.of(context)!;
@@ -384,7 +372,7 @@ Widget _buildStats(BuildContext context, CustomerAccount account) {
                   _buildStatModule(context,
                       icon: Mdi.piggyBank,
                       value:
-                          formatterMoney.format(account.stats.totalMoneyReal),
+                          moneyFormatter.format(account.stats.totalMoneyReal),
                       label: l10n.accountStatsSpentTotal),
                   _buildStatModule(context,
                       icon: Mdi.piggyBankOutline,

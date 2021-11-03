@@ -47,5 +47,11 @@
   "accountStatsDrinkTotal": "Drank all-time",
   "accountStatsDrinkToday": "Drank today",
   "accountStatsSpentTotal": "Spent all-time",
-  "accountStatsSpentToday": "Spent today"
+  "accountStatsSpentToday": "Spent today",
+
+  "orderFormChooseBeer": "Choose a Beer",
+  "orderFormChooseAddon": "Choose a supplement (optional)",
+  "orderFormChooseQuantity": "Choose a quantity",
+  "orderFormQuantityOne": "Half (25 cl)",
+  "orderFormQuantityTwo": "Pint (1/2 L)"
 }

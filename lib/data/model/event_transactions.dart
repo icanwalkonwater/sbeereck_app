@@ -33,6 +33,8 @@ abstract class EventTransaction {
 class EventTransactionDrink implements EventTransaction {
   final String id;
   final DocumentReference<Beer> beerRef;
+  final List<int> addons;
+  final int quantity;
   final int price;
   final DocumentReference<CustomerAccount> customerRef;
   final DocumentReference<Staff> staffRef;
@@ -48,9 +50,11 @@ class EventTransactionDrink implements EventTransaction {
   Future<Staff> get staff async =>
       (await staffRef.get(optionFromCache)).data()!;
 
-  const EventTransactionDrink(
+  EventTransactionDrink(
       {required this.id,
       required this.beerRef,
+      required this.addons,
+      required this.quantity,
       required this.price,
       required this.customerRef,
       required this.staffRef,
@@ -59,6 +63,8 @@ class EventTransactionDrink implements EventTransaction {
   EventTransactionDrink.blueprint(
       {this.id = 'dummy',
       required this.beerRef,
+      required this.addons,
+      required this.quantity,
       required this.price,
       required this.customerRef,
       required this.staffRef,
@@ -68,6 +74,8 @@ class EventTransactionDrink implements EventTransaction {
       : this(
           id: id,
           beerRef: (raw['beer'] as DocumentReference).withBeerConverter(),
+          addons: (raw['addons'] as List<dynamic>?)?.cast() ?? [],
+          quantity: raw['quantity'] ?? 1,
           price: raw['price'],
           customerRef: (raw['customer'] as DocumentReference)
               .withCustomerAccountConverter(),
@@ -79,6 +87,8 @@ class EventTransactionDrink implements EventTransaction {
   Map<String, dynamic> toJson() => {
         'type': EventTransactionType.drink.index,
         'beer': beerRef,
+        'addons': addons,
+        'quantity': quantity,
         'price': price,
         'customer': customerRef,
         'staff': staffRef,

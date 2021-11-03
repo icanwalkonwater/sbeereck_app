@@ -37,5 +37,11 @@
   "accountStatsDrinkTotal": "Bu au total",
   "accountStatsDrinkToday": "Bu aujourd'hui",
   "accountStatsSpentTotal": "Dépensé au total",
-  "accountStatsSpentToday": "Dépensé aujourd'hui"
+  "accountStatsSpentToday": "Dépensé aujourd'hui",
+
+  "orderFormChooseBeer": "Choisissez une Bière",
+  "orderFormChooseAddon": "Choisissez un Supplément (optionnel)",
+  "orderFormChooseQuantity": "Choisissez une Quantité",
+  "orderFormQuantityOne": "Demi (25 cl)",
+  "orderFormQuantityTwo": "Pinte (1/2 L)"
 }

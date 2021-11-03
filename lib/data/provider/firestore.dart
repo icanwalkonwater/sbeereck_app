@@ -64,6 +64,8 @@ class FirestoreDataModel extends ChangeNotifier {
     // Setup beer stream
     FirebaseFirestore.instance
         .collection(beersCol)
+        .orderBy('type')
+        .orderBy('name')
         .withBeerConverter()
         .snapshots()
         .listen(handleChangesFactory<Beer>(_beers), onError: logError);
@@ -71,6 +73,7 @@ class FirestoreDataModel extends ChangeNotifier {
     // Get all staffs
     FirebaseFirestore.instance
         .collection(staffsCol)
+        .orderBy('name')
         .withStaffConverter()
         .snapshots()
         .listen(handleChangesFactory<Staff>(_staffs), onError: logError);

@@ -5,19 +5,21 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:provider/provider.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:sbeereck_app/view/account_detail.dart';
 
 import 'data/providers.dart';
+import 'view/account_detail.dart';
 import 'view/home.dart';
 import 'view/login.dart';
+import 'view/order_form.dart';
 
-final _routes = RouteMap(
-  onUnknownRoute: (route) => const Redirect('/'),
-  routes: {
-    '/': (_) => const MaterialPage(child: HomePage()),
-    '/account/:id': (route) => MaterialPage(child: AccountDetailPage(id: route.pathParameters['id']!)),
-  }
-);
+final _routes =
+    RouteMap(onUnknownRoute: (route) => const Redirect('/'), routes: {
+  '/': (_) => const MaterialPage(child: HomePage()),
+  '/account/:id': (route) =>
+      MaterialPage(child: AccountDetailPage(id: route.pathParameters['id']!)),
+  '/account/:id/order': (route) =>
+      MaterialPage(child: OrderPage(id: route.pathParameters['id']!)),
+});
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

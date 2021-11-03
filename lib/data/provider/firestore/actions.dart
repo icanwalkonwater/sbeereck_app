@@ -30,7 +30,7 @@ extension FirestoreCustomers on FirestoreDataModel {
         .update({'isMember': true});
   }
 
-  Future<void> rechargeAccount(String id, int newBalance) async {
+  Future<void> setAccountBalance(String id, int newBalance) async {
     await FirebaseFirestore.instance
         .collection(FirestoreDataModel.accountsCol)
         .doc(id)
@@ -61,5 +61,10 @@ extension FirestoreTransaction on FirestoreDataModel {
         .collection(
             '${FirestoreDataModel.eventsCol}/${currentEvent.id}/${FirestoreDataModel.transactionsCol}')
         .add(transaction.toJson());
+  }
+
+  Future<void> payDrink(CustomerAccount account, EventTransactionDrink transaction) async {
+    await newTransaction(transaction);
+    await setAccountBalance(account.id, account.balance - transaction.price);
   }
 }
