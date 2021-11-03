@@ -1,6 +1,5 @@
 import 'dart:developer';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -19,11 +18,13 @@ class OrderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final account =
         context.select((FirestoreDataModel model) => model.accountById(id));
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Order'),
+        title: Text(l10n.orderFormTitle),
         actions: [
           Consumer<ThemeModel>(
               builder: (ctx, model, w) => IconButton(
@@ -62,16 +63,10 @@ class _OrderFormState extends State<OrderForm> {
 
   void _onSubmit(FirestoreDataModel model, int total) async {
     final beer = _beer!;
-    final transaction = EventTransactionDrink.blueprint(
-        beerRef: beer.asRef,
-        addons: _addon != null ? [_addon!.id] : [],
-        quantity: _qty,
-        price: total,
-        customerRef: widget.account.asRef,
-        staffRef: model.currentStaff.asRef,
-        created: Timestamp.now());
+    final transaction = EventTransactionDrink.blueprint(widget.account, beer,
+        _addon != null ? [_addon!.id] : [], _qty, total, model.currentStaff);
 
-    await model.payDrink(widget.account, transaction);
+    await model.handleTransaction(widget.account, transaction);
     Navigator.pop(context);
   }
 
@@ -121,7 +116,9 @@ class _OrderFormState extends State<OrderForm> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Total: ${moneyFormatter.format(total / 100)}',
+                      Text(
+                          l10n.orderFormTotal.replaceFirst(
+                              '%total', moneyFormatter.format(total / 100)),
                           style: theme.textTheme.headline5),
                       const Icon(
                         Mdi.chevronRightCircle,

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sbeereck_app/data/providers.dart';
 
@@ -10,10 +12,11 @@ extension FirestoreCustomers on FirestoreDataModel {
         orElse: () => CustomerAccount.dummy);
   }
 
-  Future<void> newAccount(NewCustomerAccount account) async {
-    await FirebaseFirestore.instance
-        .collection(FirestoreDataModel.accountsCol)
-        .add(account.toJsonFull());
+  Future<String> newAccount(NewCustomerAccount account) async {
+    return (await FirebaseFirestore.instance
+            .collection(FirestoreDataModel.accountsCol)
+            .add(account.toJsonFull()))
+        .id;
   }
 
   Future<void> editAccount(String id, NewCustomerAccount account) async {
@@ -56,15 +59,27 @@ extension FirestoreBeers on FirestoreDataModel {
 }
 
 extension FirestoreTransaction on FirestoreDataModel {
+  Future<void> handleTransaction(
+      CustomerAccount account, EventTransaction transaction) async {
+    if (transaction is EventTransactionDrink) {
+      log('Handle drink transaction');
+      await newTransaction(transaction);
+      await setAccountBalance(account.id, account.balance - transaction.price);
+    } else if (transaction is EventTransactionRecharge) {
+      log('Handle recharge transaction');
+      await newTransaction(transaction);
+      await setAccountBalance(account.id, account.balance + transaction.amount);
+    } else {
+      logError(
+          'Error a transaction that was not drink or recharge was submited !',
+          StackTrace.current);
+    }
+  }
+
   Future<void> newTransaction(EventTransaction transaction) async {
     await FirebaseFirestore.instance
         .collection(
             '${FirestoreDataModel.eventsCol}/${currentEvent.id}/${FirestoreDataModel.transactionsCol}')
         .add(transaction.toJson());
-  }
-
-  Future<void> payDrink(CustomerAccount account, EventTransactionDrink transaction) async {
-    await newTransaction(transaction);
-    await setAccountBalance(account.id, account.balance - transaction.price);
   }
 }

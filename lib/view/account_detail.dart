@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:mdi/mdi.dart';
 import 'package:provider/provider.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:sbeereck_app/data/model/event_transactions.dart';
 import 'package:sbeereck_app/data/models.dart';
 import 'package:sbeereck_app/data/providers.dart';
 import 'package:sbeereck_app/utils.dart';
@@ -46,11 +47,13 @@ class _AccountDetail extends StatelessWidget {
     showDialog(
         context: context,
         builder: (ctx) => AccountRechargeForm(callback: (recharge) {
-              context
-                  .read<FirestoreDataModel>()
-                  // Fixed point decimal math
-                  .setAccountBalance(
-                      account.id, account.balance + (recharge * 100).round());
+              final model = context.read<FirestoreDataModel>();
+              model.handleTransaction(
+                  account,
+                  EventTransactionRecharge.blueprint(
+                      account,
+                      model.currentStaff,
+                      (recharge * 100).round()));
             }));
   }
 
@@ -334,7 +337,7 @@ Widget _buildAction(IconData icon, String label, VoidCallback cb,
 }
 
 Widget _buildStats(BuildContext context, CustomerAccount account) {
-  final formatterQty = NumberFormat('#.0 L');
+  final formatterQty = NumberFormat('0.# L');
   final theme = Theme.of(context);
 
   final l10n = AppLocalizations.of(context)!;

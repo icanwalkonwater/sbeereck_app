@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mdi/mdi.dart';
 import 'package:provider/provider.dart';
+import 'package:routemaster/routemaster.dart';
 import 'package:sbeereck_app/data/providers.dart';
 import 'package:sbeereck_app/view/account_form.dart';
 import 'package:sbeereck_app/view/accounts.dart';
@@ -39,8 +40,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         useRootNavigator: false,
         barrierDismissible: false,
         builder: (ctx) => AccountDetailsForm(
-            onSubmit: (context, account) =>
-                context.read<FirestoreDataModel>().newAccount(account)));
+            onSubmit: (context, account) async {
+              final id = await context.read<FirestoreDataModel>().newAccount(account);
+              Routemaster.of(context).push('/account/$id');
+            }));
   }
 
   @override

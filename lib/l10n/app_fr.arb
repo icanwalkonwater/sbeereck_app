@@ -39,9 +39,11 @@
   "accountStatsSpentTotal": "Dépensé au total",
   "accountStatsSpentToday": "Dépensé aujourd'hui",
 
+  "orderFormTitle": "Encaisser",
   "orderFormChooseBeer": "Choisissez une Bière",
   "orderFormChooseAddon": "Choisissez un Supplément (optionnel)",
   "orderFormChooseQuantity": "Choisissez une Quantité",
   "orderFormQuantityOne": "Demi (25 cl)",
-  "orderFormQuantityTwo": "Pinte (1/2 L)"
+  "orderFormQuantityTwo": "Pinte (1/2 L)",
+  "orderFormTotal": "Total: %total"
 }

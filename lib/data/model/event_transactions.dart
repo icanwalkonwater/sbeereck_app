@@ -24,6 +24,22 @@ class EventPeriod {
       };
 }
 
+extension EventPeriodConverterD<T> on DocumentReference<T> {
+  DocumentReference<EventPeriod> withEventPeriodConverter() => withConverter(
+        fromFirestore: (snapshot, _) =>
+            EventPeriod.fromJson(snapshot.id, snapshot.data()!),
+        toFirestore: (event, _) => event.toJson(),
+      );
+}
+
+extension EventPeriodConverterQ<T> on Query<T> {
+  Query<EventPeriod> withEventPeriodConverter() => withConverter(
+        fromFirestore: (snapshot, _) =>
+            EventPeriod.fromJson(snapshot.id, snapshot.data()!),
+        toFirestore: (event, _) => event.toJson(),
+      );
+}
+
 enum EventTransactionType { drink, recharge }
 
 abstract class EventTransaction {
@@ -38,7 +54,7 @@ class EventTransactionDrink implements EventTransaction {
   final int price;
   final DocumentReference<CustomerAccount> customerRef;
   final DocumentReference<Staff> staffRef;
-  final Timestamp created;
+  final Timestamp createdAt;
 
   num get priceReal => price.toDouble() / 100.0;
 
@@ -58,17 +74,20 @@ class EventTransactionDrink implements EventTransaction {
       required this.price,
       required this.customerRef,
       required this.staffRef,
-      required this.created});
+      required this.createdAt});
 
-  EventTransactionDrink.blueprint(
-      {this.id = 'dummy',
-      required this.beerRef,
-      required this.addons,
-      required this.quantity,
-      required this.price,
-      required this.customerRef,
-      required this.staffRef,
-      required this.created});
+  EventTransactionDrink.blueprint(CustomerAccount customer, Beer beer,
+      List<int> addons, int quantity, int price, Staff staff)
+      : this(
+          id: 'dummy',
+          beerRef: beer.asRef,
+          addons: addons,
+          quantity: quantity,
+          price: price,
+          customerRef: customer.asRef,
+          staffRef: staff.asRef,
+          createdAt: Timestamp.now(),
+        );
 
   EventTransactionDrink.fromJson(String id, Map<String, dynamic> raw)
       : this(
@@ -80,7 +99,7 @@ class EventTransactionDrink implements EventTransaction {
           customerRef: (raw['customer'] as DocumentReference)
               .withCustomerAccountConverter(),
           staffRef: (raw['staff'] as DocumentReference).withStaffConverter(),
-          created: raw['created'],
+          createdAt: raw['createdAt'],
         );
 
   @override
@@ -92,6 +111,83 @@ class EventTransactionDrink implements EventTransaction {
         'price': price,
         'customer': customerRef,
         'staff': staffRef,
-        'created': created,
+        'createdAt': createdAt,
       };
+}
+
+class EventTransactionRecharge implements EventTransaction {
+  final String id;
+  final int amount;
+  final DocumentReference<CustomerAccount> customerRef;
+  final DocumentReference<Staff> staffRef;
+  final Timestamp createdAt;
+
+  EventTransactionRecharge(
+      {required this.id,
+      required this.amount,
+      required this.customerRef,
+      required this.staffRef,
+      required this.createdAt});
+
+  EventTransactionRecharge.blueprint(
+      CustomerAccount customer, Staff staff, int amount)
+      : this(
+          id: 'dummy',
+          amount: amount,
+          customerRef: customer.asRef,
+          staffRef: staff.asRef,
+          createdAt: Timestamp.now(),
+        );
+
+  EventTransactionRecharge.fromJson(String id, Map<String, dynamic> raw)
+      : this(
+          id: id,
+          amount: raw['amount'],
+          customerRef: (raw['customer'] as DocumentReference)
+              .withCustomerAccountConverter(),
+          staffRef: (raw['staff'] as DocumentReference).withStaffConverter(),
+          createdAt: raw['createdAt'],
+        );
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'type': EventTransactionType.recharge.index,
+        'amount': amount,
+        'customer': customerRef,
+        'staff': staffRef,
+        'createdAt': createdAt,
+      };
+}
+
+extension EventTransactionConverterD<T> on DocumentReference<T> {
+  DocumentReference<EventTransaction> withEventTransactionConverter() =>
+      withConverter(
+        fromFirestore: (snapshot, _) {
+          final raw = snapshot.data()!;
+          final type = EventTransactionType.values[raw['type']];
+          switch (type) {
+            case EventTransactionType.drink:
+              return EventTransactionDrink.fromJson(snapshot.id, raw);
+            case EventTransactionType.recharge:
+              return EventTransactionRecharge.fromJson(snapshot.id, raw);
+          }
+        },
+        toFirestore: (transaction, _) => transaction.toJson(),
+      );
+}
+
+extension EventTransactionConverterQ<T> on Query<T> {
+  Query<EventTransaction> withEventTransactionConverter() => withConverter(
+        fromFirestore: (snapshot, _) {
+          final raw = snapshot.data()!;
+          final type = EventTransactionType.values[raw['type']];
+          switch (type) {
+            case EventTransactionType.drink:
+              return EventTransactionDrink.fromJson(snapshot.id, raw);
+            case EventTransactionType.recharge:
+              return EventTransactionRecharge.fromJson(snapshot.id, raw);
+          }
+        },
+        toFirestore: (transaction, _) => transaction.toJson(),
+      );
 }

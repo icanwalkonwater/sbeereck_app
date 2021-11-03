@@ -98,9 +98,7 @@ class FirestoreDataModel extends ChangeNotifier {
         .collection(eventsCol)
         .orderBy('created', descending: true)
         .limit(1)
-        .withConverter<EventPeriod>(
-            fromFirestore: (s, _) => EventPeriod.fromJson(s.id, s.data()!),
-            toFirestore: (e, _) => e.toJson())
+        .withEventPeriodConverter()
         .snapshots()
         .listen((snapshot) async {
       assert(snapshot.size == 1);
@@ -114,15 +112,8 @@ class FirestoreDataModel extends ChangeNotifier {
 
       _transactionStream = FirebaseFirestore.instance
           .collection('$eventsCol/${_currentEvent.id}/$transactionsCol')
-          .orderBy('created', descending: true)
-          .withConverter<EventTransaction>(
-              fromFirestore: (s, _) {
-                final raw = s.data()!;
-                final type = EventTransactionType.values[raw['type']];
-                assert(type == EventTransactionType.drink);
-                return EventTransactionDrink.fromJson(s.id, raw);
-              },
-              toFirestore: (t, _) => t.toJson())
+          .orderBy('createdAt', descending: true)
+          .withEventTransactionConverter()
           .snapshots()
           .listen(handleChangesFactory(_transactions));
     }, onError: logError);

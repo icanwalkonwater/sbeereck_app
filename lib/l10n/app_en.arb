@@ -49,9 +49,11 @@
   "accountStatsSpentTotal": "Spent all-time",
   "accountStatsSpentToday": "Spent today",
 
+  "orderFormTitle": "Cash In",
   "orderFormChooseBeer": "Choose a Beer",
   "orderFormChooseAddon": "Choose a supplement (optional)",
   "orderFormChooseQuantity": "Choose a quantity",
   "orderFormQuantityOne": "Half (25 cl)",
-  "orderFormQuantityTwo": "Pint (1/2 L)"
+  "orderFormQuantityTwo": "Pint (1/2 L)",
+  "orderFormTotal": "Total: %total"
 }
