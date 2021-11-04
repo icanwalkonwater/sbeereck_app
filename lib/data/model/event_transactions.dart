@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:sbeereck_app/data/model/staff.dart';
 
 import '../models.dart';
 import '../providers.dart';

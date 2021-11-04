@@ -1,9 +1,9 @@
 import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:sbeereck_app/data/providers.dart';
 
 import '../../models.dart';
+import '../../providers.dart';
 
 /// Extension to contain actions possible with accounts
 extension FirestoreCustomers on FirestoreDataModel {

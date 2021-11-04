@@ -5,7 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:sbeereck_app/data/model/staff.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:version/version.dart';
 
 import '../models.dart';
 
@@ -20,6 +21,9 @@ class FirestoreDataModel extends ChangeNotifier {
   static const eventsCol = 'events';
   static const transactionsCol = 'transactions';
   static const staffsCol = 'staffs';
+  static const metaCol = 'meta';
+
+  bool? appUpToDate;
 
   final List<CustomerAccount> _accounts = [];
   final List<BeerType> _beerTypes = [];
@@ -39,10 +43,26 @@ class FirestoreDataModel extends ChangeNotifier {
 
   Staff get currentStaff => _currentStaff;
 
+  bool get isAdmin => _currentStaff.isAdmin;
+
   EventPeriod get currentEvent => _currentEvent;
 
   // Setup snapshot listening
   FirestoreDataModel() {
+    FirebaseFirestore.instance
+        .collection(metaCol)
+        .doc('0')
+        .get(const GetOptions(source: Source.server))
+        .then((snapshot) async =>
+            Version.parse(snapshot.data()!['version']) <=
+            Version.parse((await PackageInfo.fromPlatform()).version))
+        .then((res) async {
+      appUpToDate = res;
+      await _initListenersAndAll();
+    });
+  }
+
+  Future<void> _initListenersAndAll() async {
     // Setup accounts stream
     FirebaseFirestore.instance
         .collection(accountsCol)
@@ -54,12 +74,11 @@ class FirestoreDataModel extends ChangeNotifier {
             onError: logError);
 
     // Get beer types just one time
-    FirebaseFirestore.instance
+    final beerTypeSnapshot = await FirebaseFirestore.instance
         .collection(beerTypesCol)
         .withBeerTypeConverter()
-        .get()
-        .then((snapshot) =>
-            _beerTypes.addAll(snapshot.docs.map((doc) => doc.data())));
+        .get();
+    _beerTypes.addAll(beerTypeSnapshot.docs.map((doc) => doc.data()));
 
     // Setup beer stream
     FirebaseFirestore.instance

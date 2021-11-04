@@ -43,6 +43,8 @@ class SbeereckApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.select((ThemeModel theme) => theme.theme);
     final loggedIn = context.select((AuthModel auth) => auth.loggedIn);
+    final upToDate =
+        context.select((FirestoreDataModel firestore) => firestore.appUpToDate);
 
     return MaterialApp.router(
       title: "S'Beer Eck",
@@ -55,14 +57,47 @@ class SbeereckApp extends StatelessWidget {
         FormBuilderLocalizations.delegate
       ],
       routerDelegate: RoutemasterDelegate(routesBuilder: (ctx) {
-        if (!loggedIn) {
+        // If still checking for updates
+        if (upToDate == null) {
+          return RouteMap(routes: {
+            '/': (_) => const MaterialPage(
+                child: Center(child: CircularProgressIndicator())),
+          });
+
+          // If not up to date
+        } else if (upToDate == false) {
+          return RouteMap(
+              routes: {'/': (_) => const MaterialPage(child: NeedUpdatePage())});
+
+          // If not logged in
+        } else if (!loggedIn) {
           return RouteMap(
               routes: {'/': (_) => const MaterialPage(child: LoginPage())});
+
+          // Finally, the real app
         } else {
           return _routes;
         }
       }),
       routeInformationParser: const RoutemasterParser(),
+    );
+  }
+}
+
+class NeedUpdatePage extends StatelessWidget {
+  const NeedUpdatePage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: Center(
+          child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text('Please update !', style: theme.textTheme.headline4),
+        ),
+      )),
     );
   }
 }
