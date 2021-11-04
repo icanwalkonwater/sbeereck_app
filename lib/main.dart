@@ -26,13 +26,11 @@ void main() async {
 
   await Firebase.initializeApp();
 
-  final themeModel = ThemeModel();
-  await themeModel.init();
-
   runApp(MultiProvider(providers: [
-    ChangeNotifierProvider.value(value: themeModel),
-    ChangeNotifierProvider(create: (ctx) => AuthModel()),
-    ChangeNotifierProvider(create: (ctx) => FirestoreDataModel()),
+    ChangeNotifierProvider(create: (_) => ThemeModel(), lazy: false),
+    ChangeNotifierProvider(create: (_) => UpToDateModel(), lazy: false),
+    ChangeNotifierProvider(create: (_) => AuthModel()),
+    ChangeNotifierProvider(create: (_) => FirestoreDataModel()),
   ], child: const SbeereckApp()));
 }
 
@@ -43,44 +41,45 @@ class SbeereckApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.select((ThemeModel theme) => theme.theme);
     final loggedIn = context.select((AuthModel auth) => auth.loggedIn);
-    final upToDate =
-        context.select((FirestoreDataModel firestore) => firestore.appUpToDate);
 
-    return MaterialApp.router(
-      title: "S'Beer Eck",
-      theme: ThemeData(brightness: theme),
-      supportedLocales: const [Locale('fr'), Locale('en')],
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        FormBuilderLocalizations.delegate
-      ],
-      routerDelegate: RoutemasterDelegate(routesBuilder: (ctx) {
-        // If still checking for updates
-        if (upToDate == null) {
-          return RouteMap(routes: {
-            '/': (_) => const MaterialPage(
-                child: Center(child: CircularProgressIndicator())),
-          });
+    return Consumer<UpToDateModel>(
+        builder: (context, upToDateModel, w) => MaterialApp.router(
+              title: "S'Beer Eck",
+              theme: ThemeData(brightness: theme),
+              supportedLocales: const [Locale('fr'), Locale('en')],
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                FormBuilderLocalizations.delegate
+              ],
+              routerDelegate: RoutemasterDelegate(routesBuilder: (ctx) {
+                // If still checking for updates
+                if (upToDateModel.upToDate == null) {
+                  return RouteMap(routes: {
+                    '/': (_) => const MaterialPage(
+                        child: Center(child: CircularProgressIndicator())),
+                  });
 
-          // If not up to date
-        } else if (upToDate == false) {
-          return RouteMap(
-              routes: {'/': (_) => const MaterialPage(child: NeedUpdatePage())});
+                  // If not up to date
+                } else if (upToDateModel.upToDate == false) {
+                  return RouteMap(routes: {
+                    '/': (_) => const MaterialPage(child: NeedUpdatePage())
+                  });
 
-          // If not logged in
-        } else if (!loggedIn) {
-          return RouteMap(
-              routes: {'/': (_) => const MaterialPage(child: LoginPage())});
+                  // If not logged in
+                } else if (!loggedIn) {
+                  return RouteMap(routes: {
+                    '/': (_) => const MaterialPage(child: LoginPage())
+                  });
 
-          // Finally, the real app
-        } else {
-          return _routes;
-        }
-      }),
-      routeInformationParser: const RoutemasterParser(),
-    );
+                  // Finally, the real app
+                } else {
+                  return _routes;
+                }
+              }),
+              routeInformationParser: const RoutemasterParser(),
+            ));
   }
 }
 

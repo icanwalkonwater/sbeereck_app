@@ -4,10 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 const themeKey = 'theme';
 
 class ThemeModel extends ChangeNotifier {
+  ThemeModel() {
+    init();
+  }
+
   Future init() async {
     _storage = await SharedPreferences.getInstance();
     if (_storage.containsKey(themeKey)) {
       _mode = Brightness.values[_storage.getInt(themeKey)!];
+      notifyListeners();
     }
   }
 

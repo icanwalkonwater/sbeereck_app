@@ -21,9 +21,8 @@ class FirestoreDataModel extends ChangeNotifier {
   static const eventsCol = 'events';
   static const transactionsCol = 'transactions';
   static const staffsCol = 'staffs';
-  static const metaCol = 'meta';
 
-  bool? appUpToDate;
+  bool _hasBeenInit = false;
 
   final List<CustomerAccount> _accounts = [];
   final List<BeerType> _beerTypes = [];
@@ -49,20 +48,33 @@ class FirestoreDataModel extends ChangeNotifier {
 
   // Setup snapshot listening
   FirestoreDataModel() {
-    FirebaseFirestore.instance
-        .collection(metaCol)
-        .doc('0')
-        .get(const GetOptions(source: Source.server))
-        .then((snapshot) async =>
-            Version.parse(snapshot.data()!['version']) <=
-            Version.parse((await PackageInfo.fromPlatform()).version))
-        .then((res) async {
-      appUpToDate = res;
-      await _initListenersAndAll();
+    // Listen for current staff
+    FirebaseAuth.instance.userChanges().listen((user) async {
+      if (user == null) return;
+
+      _currentStaff = (await FirebaseFirestore.instance
+          .collection(staffsCol)
+          .where('mail', isEqualTo: user.email)
+          .limit(1)
+          .withStaffConverter()
+          .get())
+          .docs
+          .first
+          .data();
+      notifyListeners();
+
+      if (!_hasBeenInit) {
+        _initListenersAndAll();
+      }
     });
   }
 
   Future<void> _initListenersAndAll() async {
+    print('Firebase INIT !');
+    if (_hasBeenInit) {
+      return;
+    }
+    _hasBeenInit = true;
     // Setup accounts stream
     FirebaseFirestore.instance
         .collection(accountsCol)
@@ -97,21 +109,6 @@ class FirestoreDataModel extends ChangeNotifier {
         .snapshots()
         .listen(handleChangesFactory<Staff>(_staffs), onError: logError);
 
-    // Listen for current staff
-    FirebaseAuth.instance.authStateChanges().listen((user) async {
-      if (user == null) return;
-
-      _currentStaff = (await FirebaseFirestore.instance
-              .collection(staffsCol)
-              .where('mail', isEqualTo: user.email)
-              .limit(1)
-              .withStaffConverter()
-              .get())
-          .docs
-          .first
-          .data();
-    });
-
     // Setup event & transactions
     FirebaseFirestore.instance
         .collection(eventsCol)
@@ -136,6 +133,8 @@ class FirestoreDataModel extends ChangeNotifier {
           .snapshots()
           .listen(handleChangesFactory(_transactions));
     }, onError: logError);
+
+    notifyListeners();
   }
 
   void logError(dynamic err, dynamic stacktrace) =>
