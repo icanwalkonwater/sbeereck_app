@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:intl/intl.dart';
 import 'package:mdi/mdi.dart';
 import 'package:provider/provider.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:sbeereck_app/data/model/event_transactions.dart';
-import 'package:sbeereck_app/data/models.dart';
-import 'package:sbeereck_app/data/providers.dart';
-import 'package:sbeereck_app/utils.dart';
-import 'package:sbeereck_app/view/account_form.dart';
 
+import '../data/models.dart';
+import '../data/providers.dart';
+import '../utils.dart';
+import '../view/account_form.dart';
 import 'account_detail_recharge_form.dart';
 
 class AccountDetailPage extends StatelessWidget {
@@ -27,10 +26,10 @@ class AccountDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: Text(i10n.accountDetailTitle),
         actions: [
-          Consumer<ThemeModel>(
-              builder: (ctx, model, w) => IconButton(
-                  icon: const Icon(Mdi.brightness6),
-                  onPressed: () async => await model.switchTheme()))
+          IconButton(
+              icon: const Icon(Mdi.brightness6),
+              onPressed: () async =>
+                  await context.read<ThemeModel>().switchTheme())
         ],
       ),
       body: SingleChildScrollView(child: _AccountDetail(account: account)),
@@ -51,9 +50,7 @@ class _AccountDetail extends StatelessWidget {
               model.handleTransaction(
                   account,
                   EventTransactionRecharge.blueprint(
-                      account,
-                      model.currentStaff,
-                      (recharge * 100).round()));
+                      account, model.currentStaff, (recharge * 100).round()));
             }));
   }
 
@@ -75,334 +72,397 @@ class _AccountDetail extends StatelessWidget {
   void _onDelete(BuildContext context) {
     // Triggers 2 dialog confirmation boxes for fun then deletes
 
-    final i10n = AppLocalizations.of(context)!;
-    final gInt = MaterialLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
-    // Separate inner dialog for clarity
-    void _innerDialog() {
-      showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-                title: Text(i10n.accountDeleteConfirmTitle2),
-                actions: [
-                  TextButton(
-                    child: Text(gInt.cancelButtonLabel),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                  TextButton(
-                    child: Text(i10n.accountDeleteConfirmOk2),
-                    onPressed: () {
-                      Navigator.pop(ctx);
-
-                      // Navigate to home just to be safe
-                      Routemaster.of(context).replace('/');
-
-                      ctx.read<FirestoreDataModel>().deleteAccount(account.id);
-                    },
-                  )
-                ],
-              ));
-    }
-
-    showDialog(
+    showSimpleDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
-              title: Text(i10n.accountDeleteConfirmTitle),
-              actions: [
-                TextButton(
-                    child: Text(gInt.cancelButtonLabel),
-                    onPressed: () => Navigator.pop(ctx)),
-                TextButton(
-                    child: Text(gInt.okButtonLabel),
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      _innerDialog();
-                    })
-              ],
-            ));
+        title: l10n.accountDeleteConfirmTitle,
+        popOnAction: true,
+        onOk: (ctx) {
+          showSimpleDialog(
+              context: ctx,
+              title: l10n.accountDeleteConfirmTitle2,
+              popOnAction: true,
+              onOk: (ctx) {
+                // Navigate to home just to be safe
+                Routemaster.of(ctx).replace('/');
+                ctx.read<FirestoreDataModel>().deleteAccount(account.id);
+              });
+        });
   }
 
   void _onMakeMember(BuildContext context) {
-    final i10n = AppLocalizations.of(context)!;
-    final gInt = MaterialLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
-    showDialog(
+    showSimpleDialog(
         context: context,
-        builder: (ctx) => AlertDialog(
-              title: Text(i10n.accountMakeMemberTitle),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(gInt.cancelButtonLabel),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    context
-                        .read<FirestoreDataModel>()
-                        .makeAccountMember(account.id);
-                  },
-                  child: Text(gInt.okButtonLabel),
-                )
-              ],
-            ));
+        title: l10n.accountMakeMemberTitle,
+        popOnAction: true,
+        onOk: (ctx) {
+          ctx.read<FirestoreDataModel>().makeAccountMember(account.id);
+        });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: _buildHeader(context, account),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: _buildBalance(context, account,
-            onRecharge: () => _onRecharge(context)),
-      ),
-      if (account.isMember)
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: _buildActions(context, account,
-              onPay: () => _onPay(context),
-              onEdit: () => _onEdit(context),
-              onDelete: () => _onDelete(context)),
-        ),
+    return _AccountBodyWrapper(children: [
+      _AccountHeader(account: account),
+      _AccountBalance(account: account, onRecharge: () => _onRecharge(context)),
       if (!account.isMember)
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: _buildNotMember(context,
-              onMakeMember: () => _onMakeMember(context)),
+        _AccountMakeMember(onMakeMember: () => _onMakeMember(context)),
+      if (account.isMember)
+        _AccountActions(
+          account: account,
+          onPay: () => _onPay(context),
+          onEdit: () => _onEdit(context),
+          onDelete: () => _onDelete(context),
         ),
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: _buildStats(context, account),
+      _AccountStats(account: account),
+    ]);
+  }
+}
+
+class _AccountBodyWrapper extends StatelessWidget {
+  final List<Widget> children;
+
+  const _AccountBodyWrapper({Key? key, required this.children})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+        children: children
+            .map((child) => Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: child,
+                ))
+            .toList(growable: false));
+  }
+}
+
+class _AccountHeader extends StatelessWidget {
+  final CustomerAccount account;
+
+  const _AccountHeader({Key? key, required this.account}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final image = AssetImage(account.school.assetLogo());
+    final name = '${account.firstName} ${account.lastName.toUpperCase()}';
+    final id = account.id;
+
+    return Card(
+      elevation: 2.0,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: CircleAvatar(foregroundImage: image, radius: 40.0),
+            ),
+            Flexible(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: theme.textTheme.headline5),
+                  Text(id, style: theme.textTheme.overline),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountBalance extends StatelessWidget {
+  final CustomerAccount account;
+  final VoidCallback onRecharge;
+
+  const _AccountBalance(
+      {Key? key, required this.account, required this.onRecharge})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    final balance = moneyFormatter.format(account.balanceReal);
+
+    final theme = Theme.of(context);
+    final bgColor =
+        account.isPoor ? theme.colorScheme.error : theme.colorScheme.primary;
+    final fgColor = account.isPoor ? Colors.white : theme.colorScheme.onPrimary;
+
+    return ElevatedButton(
+      onPressed: onRecharge,
+      style: ElevatedButton.styleFrom(primary: bgColor, onPrimary: fgColor),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(
+                  account.isPoor ? Mdi.alert : Mdi.wallet,
+                  size: 48.0,
+                ),
+                const SizedBox(width: 8.0),
+                Center(
+                    child: Text(
+                  balance,
+                  style: theme.textTheme.headline3?.apply(color: fgColor),
+                )),
+              ],
+            ),
+            Align(
+                alignment: Alignment.centerLeft,
+                child: Text(l10n.accountDetailRecharge)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountMakeMember extends StatelessWidget {
+  final VoidCallback onMakeMember;
+
+  const _AccountMakeMember({Key? key, required this.onMakeMember})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    final theme = Theme.of(context);
+    final bgColor = theme.colorScheme.error;
+    final fgColor = Colors.white;
+
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(primary: bgColor, onPrimary: fgColor),
+      onPressed: onMakeMember,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const Icon(Mdi.closeThick, size: 48.0),
+                const SizedBox(width: 8.0),
+                Flexible(
+                    child: Text(l10n.accountDetailNotMemberTitle,
+                        style:
+                            theme.textTheme.headline5?.apply(color: fgColor))),
+              ],
+            ),
+            Align(
+                alignment: Alignment.centerLeft,
+                child: Text(l10n.accountDetailNotMemberHint)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountActions extends StatelessWidget {
+  final CustomerAccount account;
+  final VoidCallback onPay;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _AccountActions(
+      {Key? key,
+      required this.account,
+      required this.onPay,
+      required this.onEdit,
+      required this.onDelete})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    final theme = Theme.of(context);
+    final btnStylePay = ElevatedButton.styleFrom();
+    final btnStyleEdit = ElevatedButton.styleFrom(
+        primary: theme.colorScheme.surface,
+        onPrimary: theme.colorScheme.onSurface);
+    final btnStyleDelete = ElevatedButton.styleFrom(
+      primary: theme.colorScheme.error,
+      onPrimary: Colors.white,
+    );
+
+    return Row(
+      children: [
+        Flexible(
+            fit: FlexFit.tight,
+            child: _AccountAction(
+                icon: Mdi.glassMugVariant,
+                label: l10n.accountDetailActionCollect,
+                style: btnStylePay,
+                onPressed: onPay,
+                enabled: !account.isPoor)),
+        const SizedBox(width: 8.0, height: 0.0),
+        Flexible(
+            fit: FlexFit.tight,
+            child: _AccountAction(
+                icon: Mdi.pencil,
+                label: l10n.accountDetailActionEdit,
+                style: btnStyleEdit,
+                onPressed: onEdit)),
+        const SizedBox(width: 8.0),
+        Flexible(
+            fit: FlexFit.tight,
+            child: _AccountAction(
+                icon: Mdi.deleteForever,
+                label: l10n.accountDetailActionDelete,
+                style: btnStyleDelete,
+                onPressed: onDelete)),
+      ],
+    );
+  }
+}
+
+class _AccountAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+  final ButtonStyle? style;
+  final bool enabled;
+
+  const _AccountAction(
+      {Key? key,
+      required this.icon,
+      required this.label,
+      this.style,
+      required this.onPressed,
+      this.enabled = true})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+        onPressed: enabled ? onPressed : null,
+        style: style,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
+          child: Column(children: [
+            Icon(icon, size: 48.0),
+            Text(label),
+          ]),
+        ));
+  }
+}
+
+class _AccountStats extends StatelessWidget {
+  final CustomerAccount account;
+
+  const _AccountStats({Key? key, required this.account}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return _AccountStatsLayout(title: l10n.accountStatsTitle, leftChildren: [
+      _AccountStatModule(
+        icon: Mdi.beer,
+        label: l10n.accountStatsDrinkTotal,
+        value: beerQuantityFormatter.format(account.stats.quantityDrank),
+      ),
+      _AccountStatModule(
+        icon: Mdi.beerOutline,
+        label: l10n.accountStatsDrinkToday,
+        value: beerQuantityFormatter.format(99.9),
+      ),
+    ], rightChildren: [
+      _AccountStatModule(
+        icon: Mdi.piggyBank,
+        label: l10n.accountStatsSpentTotal,
+        value: moneyFormatter.format(account.stats.totalMoneyReal),
+      ),
+      _AccountStatModule(
+        icon: Mdi.piggyBankOutline,
+        label: l10n.accountStatsSpentToday,
+        value: moneyFormatter.format(99.99),
       ),
     ]);
   }
 }
 
-Widget _buildHeader(BuildContext context, CustomerAccount account) {
-  final theme = Theme.of(context);
-  return Card(
-    elevation: 2.0,
-    child: Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-                foregroundImage: AssetImage(account.school.assetLogo()),
-                radius: 40.0),
-          ),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${account.firstName} ${account.lastName.toUpperCase()}',
-                    style: theme.textTheme.headline5),
-                Text(account.id, style: theme.textTheme.overline),
-              ],
+class _AccountStatsLayout extends StatelessWidget {
+  final String title;
+  final List<Widget> leftChildren;
+  final List<Widget> rightChildren;
+
+  const _AccountStatsLayout(
+      {Key? key,
+      required this.title,
+      required this.leftChildren,
+      required this.rightChildren})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: 2.0,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: theme.textTheme.headline6),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: leftChildren),
             ),
-          ),
-        ],
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: rightChildren),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
-Widget _buildBalance(BuildContext context, CustomerAccount account,
-    {required VoidCallback onRecharge}) {
-  final i10n = AppLocalizations.of(context)!;
+class _AccountStatModule extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
 
-  final theme = Theme.of(context);
-  final color =
-      account.isPoor ? theme.colorScheme.error : theme.colorScheme.primary;
-  final onColor = account.isPoor ? Colors.white : theme.colorScheme.onPrimary;
+  const _AccountStatModule(
+      {Key? key, required this.icon, required this.label, required this.value})
+      : super(key: key);
 
-  return ElevatedButton(
-    style: ElevatedButton.styleFrom(primary: color, onPrimary: onColor),
-    onPressed: onRecharge,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(
-                account.isPoor ? Mdi.alert : Mdi.wallet,
-                size: 48.0,
-              ),
-              const SizedBox(width: 8.0),
-              Center(
-                  child: Text(
-                moneyFormatter.format(account.balanceReal),
-                style: theme.textTheme.headline3?.apply(color: onColor),
-              )),
-            ],
-          ),
-          Align(
-              alignment: Alignment.centerLeft,
-              child: Text(i10n.accountDetailRecharge)),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget _buildNotMember(BuildContext context,
-    {required VoidCallback onMakeMember}) {
-  final i10n = AppLocalizations.of(context)!;
-
-  final theme = Theme.of(context);
-  final color = theme.colorScheme.error;
-  final onColor = Colors.white;
-
-  return ElevatedButton(
-    style: ElevatedButton.styleFrom(primary: color, onPrimary: onColor),
-    onPressed: onMakeMember,
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Icon(Mdi.closeThick, size: 48.0),
-              const SizedBox(width: 8.0),
-              Flexible(
-                  child: Text(i10n.accountDetailNotMemberTitle,
-                      style: theme.textTheme.headline5?.apply(color: onColor))),
-            ],
-          ),
-          Align(
-              alignment: Alignment.centerLeft,
-              child: Text(i10n.accountDetailNotMemberHint)),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget _buildActions(BuildContext context, CustomerAccount account,
-    {required VoidCallback onPay,
-    required VoidCallback onEdit,
-    required VoidCallback onDelete}) {
-  final i10n = AppLocalizations.of(context)!;
-
-  final theme = Theme.of(context);
-  final styleNormal = ElevatedButton.styleFrom(
-      primary: theme.colorScheme.surface,
-      onPrimary: theme.colorScheme.onSurface);
-  final styleDelete = ElevatedButton.styleFrom(
-      primary: theme.colorScheme.error, onPrimary: Colors.white);
-
-  return Row(
-    children: [
-      Flexible(
-        fit: FlexFit.tight,
-        child: _buildAction(
-            Mdi.glassMugVariant, i10n.accountDetailActionCollect, onPay,
-            enabled: !account.isPoor),
-      ),
-      const SizedBox(width: 8.0, height: 0.0),
-      Flexible(
-        fit: FlexFit.tight,
-        child: _buildAction(Mdi.pencil, i10n.accountDetailActionEdit, onEdit,
-            style: styleNormal),
-      ),
-      const SizedBox(width: 8.0),
-      Flexible(
-          fit: FlexFit.tight,
-          child: _buildAction(
-              Mdi.deleteForever, i10n.accountDetailActionDelete, onDelete,
-              style: styleDelete)),
-    ],
-  );
-}
-
-Widget _buildAction(IconData icon, String label, VoidCallback cb,
-    {ButtonStyle? style, bool enabled = true}) {
-  return ElevatedButton(
-    onPressed: enabled ? cb : null,
-    style: style,
-    child: Padding(
-      padding: const EdgeInsets.only(top: 8.0, bottom: 8.0),
-      child: Column(children: [
-        Icon(icon, size: 48.0),
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 32.0),
+            Text(value, style: theme.textTheme.headline5),
+          ],
+        ),
+        const SizedBox(height: 4.0),
         Text(label),
-      ]),
-    ),
-  );
-}
-
-Widget _buildStats(BuildContext context, CustomerAccount account) {
-  final formatterQty = NumberFormat('0.# L');
-  final theme = Theme.of(context);
-
-  final l10n = AppLocalizations.of(context)!;
-
-  return Card(
-    elevation: 2.0,
-    child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.accountStatsTitle, style: theme.textTheme.headline6),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatModule(context,
-                      icon: Mdi.beer,
-                      value: formatterQty.format(account.stats.quantityDrank),
-                      label: l10n.accountStatsDrinkTotal),
-                  _buildStatModule(context,
-                      icon: Mdi.beerOutline,
-                      value: 'XX.X L',
-                      label: l10n.accountStatsDrinkToday),
-                ]),
-          ),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildStatModule(context,
-                      icon: Mdi.piggyBank,
-                      value:
-                          moneyFormatter.format(account.stats.totalMoneyReal),
-                      label: l10n.accountStatsSpentTotal),
-                  _buildStatModule(context,
-                      icon: Mdi.piggyBankOutline,
-                      value: 'XX €',
-                      label: l10n.accountStatsSpentToday),
-                ]),
-          ),
-        ],
-      ),
-    ),
-  );
-}
-
-Widget _buildStatModule(BuildContext context,
-    {required IconData icon, required String value, required String label}) {
-  final theme = Theme.of(context);
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-      Row(
-        children: [
-          Icon(icon, size: 32.0),
-          Text(value, style: theme.textTheme.headline5),
-        ],
-      ),
-      const SizedBox(height: 4.0),
-      Text(label),
-    ],
-  );
+      ],
+    );
+  }
 }

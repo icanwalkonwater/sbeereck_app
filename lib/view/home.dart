@@ -3,9 +3,10 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mdi/mdi.dart';
 import 'package:provider/provider.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:sbeereck_app/data/providers.dart';
-import 'package:sbeereck_app/view/account_form.dart';
-import 'package:sbeereck_app/view/accounts.dart';
+
+import '../data/providers.dart';
+import '../view/account_form.dart';
+import '../view/accounts.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -39,37 +40,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         context: context,
         useRootNavigator: false,
         barrierDismissible: false,
-        builder: (ctx) => AccountDetailsForm(
-            onSubmit: (context, account) async {
-              final id = await context.read<FirestoreDataModel>().newAccount(account);
+        builder: (ctx) =>
+            AccountDetailsForm(onSubmit: (context, account) async {
+              final id =
+                  await context.read<FirestoreDataModel>().newAccount(account);
               Routemaster.of(context).push('/account/$id');
             }));
   }
 
   @override
   Widget build(BuildContext context) {
-    final i10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       // Top bar
       appBar: AppBar(
-        title: Text(i10n.appName),
+        title: Text(l10n.appName),
         actions: [
-          Consumer<ThemeModel>(
-              builder: (ctx, model, w) => IconButton(
-                  icon: const Icon(Mdi.brightness6),
-                  onPressed: () async => await model.switchTheme())),
-          Consumer<AuthModel>(
-              builder: (ctx, model, w) => IconButton(
-                    icon: const Icon(Icons.logout),
-                    onPressed: () async => await model.logout(),
-                  ))
+          IconButton(
+              icon: const Icon(Mdi.brightness6),
+              onPressed: () async =>
+                  await context.read<ThemeModel>().switchTheme()),
+          IconButton(
+            icon: const Icon(Mdi.logout),
+            onPressed: () async => await context.read<AuthModel>().logout(),
+          )
         ],
       ),
 
       // Body tabs
       body: TabBarView(controller: _tabController, children: const [
         AccountList(),
-        Icon(Icons.anchor),
+        Icon(Mdi.glassMugVariant),
       ]),
 
       // FAB
@@ -85,10 +86,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         currentIndex: _currentIndex,
         items: [
           BottomNavigationBarItem(
-              icon: const Icon(Icons.account_circle_rounded),
-              label: i10n.pageAccount),
+              icon: const Icon(Mdi.accountGroup), label: l10n.pageAccount),
           BottomNavigationBarItem(
-              icon: const Icon(Icons.anchor), label: i10n.pageBeers),
+              icon: const Icon(Mdi.glassMugVariant), label: l10n.pageBeers),
         ],
         onTap: _tabController.animateTo,
       ),

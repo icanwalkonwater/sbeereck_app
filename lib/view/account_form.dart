@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:sbeereck_app/data/models.dart';
+
+import '../data/models.dart';
 
 class AccountDetailsForm extends StatefulWidget {
   final void Function(BuildContext, NewCustomerAccount) onSubmit;
@@ -38,11 +39,11 @@ class _AccountDetailsFormState extends State<AccountDetailsForm> {
 
   @override
   Widget build(BuildContext context) {
-    final i10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context)!;
     final gInt = MaterialLocalizations.of(context);
 
     return AlertDialog(
-      title: Text(i10n.formAccountCreationName),
+      title: Text(l10n.formAccountCreationName),
       scrollable: true,
       content: FormBuilder(
         key: _formKey,
@@ -55,7 +56,7 @@ class _AccountDetailsFormState extends State<AccountDetailsForm> {
             FormBuilderTextField(
               name: 'firstName',
               textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(labelText: i10n.accountFirstName),
+              decoration: InputDecoration(labelText: l10n.accountFirstName),
               validator: FormBuilderValidators.required(context),
             ),
 
@@ -63,7 +64,7 @@ class _AccountDetailsFormState extends State<AccountDetailsForm> {
             FormBuilderTextField(
               name: 'lastName',
               textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(labelText: i10n.accountLastName),
+              decoration: InputDecoration(labelText: l10n.accountLastName),
               validator: FormBuilderValidators.required(context),
             ),
 
@@ -71,45 +72,45 @@ class _AccountDetailsFormState extends State<AccountDetailsForm> {
             FormBuilderChoiceChip(
               name: 'school',
               decoration: InputDecoration(
-                  labelText: i10n.accountSchool, border: InputBorder.none),
+                  labelText: l10n.accountSchool, border: InputBorder.none),
               spacing: 3,
               runSpacing: 0,
               options: [
                 FormBuilderFieldOption(
                   value: CustomerSchool.ensimag,
-                  child: Text(i10n.schoolEnsimag),
+                  child: Text(l10n.schoolEnsimag),
                 ),
                 FormBuilderFieldOption(
                   value: CustomerSchool.phelma,
-                  child: Text(i10n.schoolPhelma),
+                  child: Text(l10n.schoolPhelma),
                 ),
                 FormBuilderFieldOption(
                   value: CustomerSchool.e3,
-                  child: Text(i10n.schoolE3),
+                  child: Text(l10n.schoolE3),
                 ),
                 FormBuilderFieldOption(
                   value: CustomerSchool.papet,
-                  child: Text(i10n.schoolPapet),
+                  child: Text(l10n.schoolPapet),
                 ),
                 FormBuilderFieldOption(
                   value: CustomerSchool.gi,
-                  child: Text(i10n.schoolGi),
+                  child: Text(l10n.schoolGi),
                 ),
                 FormBuilderFieldOption(
                   value: CustomerSchool.polytech,
-                  child: Text(i10n.schoolPolytech),
+                  child: Text(l10n.schoolPolytech),
                 ),
                 FormBuilderFieldOption(
                   value: CustomerSchool.esisar,
-                  child: Text(i10n.schoolEsisar),
+                  child: Text(l10n.schoolEsisar),
                 ),
                 FormBuilderFieldOption(
                   value: CustomerSchool.iae,
-                  child: Text(i10n.schoolIae),
+                  child: Text(l10n.schoolIae),
                 ),
                 FormBuilderFieldOption(
                   value: CustomerSchool.uga,
-                  child: Text(i10n.schoolUga),
+                  child: Text(l10n.schoolUga),
                 ),
               ],
             ),

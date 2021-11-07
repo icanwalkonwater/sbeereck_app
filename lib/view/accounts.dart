@@ -1,11 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:routemaster/routemaster.dart';
-import 'package:sbeereck_app/data/providers.dart';
 
+import '../data/providers.dart';
 import '../utils.dart';
 
 class AccountList extends StatefulWidget {
@@ -16,8 +14,6 @@ class AccountList extends StatefulWidget {
 }
 
 class _AccountListState extends State<AccountList> {
-  static const _debounceTime = Duration(milliseconds: 200);
-  Timer? _debounce;
   var _searchTerm = '';
 
   List<DataRow> _buildRows(BuildContext ctx, FirestoreDataModel model) {
@@ -63,13 +59,7 @@ class _AccountListState extends State<AccountList> {
         .toList(growable: false);
   }
 
-  void _onSearchInput(String val) {
-    if (_debounce?.isActive ?? false) {
-      _debounce!.cancel();
-    }
-
-    _debounce = Timer(_debounceTime, () => setState(() => _searchTerm = val));
-  }
+  void _onSearchInput(String val) => setState(() => _searchTerm = val);
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +70,8 @@ class _AccountListState extends State<AccountList> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
           child: TextField(
-            onChanged: _onSearchInput,
+            onChanged:
+                debounce(const Duration(milliseconds: 200), _onSearchInput),
             decoration: InputDecoration(
               labelText: i10n.searchBarHint,
             ),

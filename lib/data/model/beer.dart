@@ -124,3 +124,10 @@ extension BeerTypeConverterQ<T> on Query<T> {
         toFirestore: (ty, _) => ty.toJson(),
       );
 }
+
+class BeerWithType {
+  final Beer beer;
+  final BeerType type;
+
+  BeerWithType(this.beer, this.type);
+}

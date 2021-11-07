@@ -28,11 +28,11 @@ class _AccountRechargeFormState extends State<AccountRechargeForm> {
 
   @override
   Widget build(BuildContext context) {
-    final i10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context)!;
     final gInt = MaterialLocalizations.of(context);
 
     return AlertDialog(
-      title: Text(i10n.accountRechargeTitle),
+      title: Text(l10n.accountRechargeTitle),
       content: FormBuilder(
         key: _formKey,
         enabled: !_lockForm,
@@ -40,7 +40,7 @@ class _AccountRechargeFormState extends State<AccountRechargeForm> {
         child: FormBuilderTextField(
           name: 'recharge',
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(labelText: i10n.accountRechargeField),
+          decoration: InputDecoration(labelText: l10n.accountRechargeField),
           validator: FormBuilderValidators.compose([
             FormBuilderValidators.required(context),
             FormBuilderValidators.numeric(context),

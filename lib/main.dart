@@ -21,6 +21,10 @@ final _routes =
       MaterialPage(child: OrderPage(id: route.pathParameters['id']!)),
 });
 
+RouteMap makeSingleRoute(Widget child) => RouteMap(routes: {
+      '/': (_) => MaterialPage(child: child),
+    });
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -39,52 +43,59 @@ class SbeereckApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.select((ThemeModel theme) => theme.theme);
-    final loggedIn = context.select((AuthModel auth) => auth.loggedIn);
+    return Selector<ThemeModel, Brightness>(
+      selector: (_, model) => model.theme,
+      builder: (_, themeMode, __) => Consumer<UpToDateModel>(
+          builder: (_, upToDateModel, __) => Selector<AuthModel, bool>(
+                selector: (_, model) => model.loggedIn,
+                builder: (_, loggedIn, __) => MaterialApp.router(
+                  title: "S'Beer Eck",
+                  theme: ThemeData(brightness: themeMode),
+                  supportedLocales: const [Locale('fr'), Locale('en')],
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    FormBuilderLocalizations.delegate
+                  ],
+                  routerDelegate: RoutemasterDelegate(routesBuilder: (ctx) {
+                    // If still checking for updates
+                    if (upToDateModel.upToDate == null) {
+                      return makeSingleRoute(const _LoadingPage());
 
-    return Consumer<UpToDateModel>(
-        builder: (context, upToDateModel, w) => MaterialApp.router(
-              title: "S'Beer Eck",
-              theme: ThemeData(brightness: theme),
-              supportedLocales: const [Locale('fr'), Locale('en')],
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                FormBuilderLocalizations.delegate
-              ],
-              routerDelegate: RoutemasterDelegate(routesBuilder: (ctx) {
-                // If still checking for updates
-                if (upToDateModel.upToDate == null) {
-                  return RouteMap(routes: {
-                    '/': (_) => const MaterialPage(
-                        child: Center(child: CircularProgressIndicator())),
-                  });
+                      // If not up to date
+                    } else if (upToDateModel.upToDate == false) {
+                      return makeSingleRoute(const _NeedUpdatePage());
 
-                  // If not up to date
-                } else if (upToDateModel.upToDate == false) {
-                  return RouteMap(routes: {
-                    '/': (_) => const MaterialPage(child: NeedUpdatePage())
-                  });
+                      // If not logged in
+                    } else if (!loggedIn) {
+                      return makeSingleRoute(const LoginPage());
 
-                  // If not logged in
-                } else if (!loggedIn) {
-                  return RouteMap(routes: {
-                    '/': (_) => const MaterialPage(child: LoginPage())
-                  });
-
-                  // Finally, the real app
-                } else {
-                  return _routes;
-                }
-              }),
-              routeInformationParser: const RoutemasterParser(),
-            ));
+                      // Finally, the real app
+                    } else {
+                      return _routes;
+                    }
+                  }),
+                  routeInformationParser: const RoutemasterParser(),
+                ),
+              )),
+    );
   }
 }
 
-class NeedUpdatePage extends StatelessWidget {
-  const NeedUpdatePage({Key? key}) : super(key: key);
+class _LoadingPage extends StatelessWidget {
+  const _LoadingPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+}
+
+class _NeedUpdatePage extends StatelessWidget {
+  const _NeedUpdatePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
