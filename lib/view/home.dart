@@ -3,6 +3,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:mdi/mdi.dart';
 import 'package:provider/provider.dart';
 import 'package:routemaster/routemaster.dart';
+import 'package:sbeereck_app/view/beer_list.dart';
 
 import '../data/providers.dart';
 import '../view/account_form.dart';
@@ -70,7 +71,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       // Body tabs
       body: TabBarView(controller: _tabController, children: const [
         AccountList(),
-        Icon(Mdi.glassMugVariant),
+        BeerList(),
       ]),
 
       // FAB

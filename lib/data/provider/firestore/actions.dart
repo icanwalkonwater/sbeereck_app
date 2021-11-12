@@ -54,7 +54,7 @@ extension FirestoreBeers on FirestoreDataModel {
     await FirebaseFirestore.instance
         .collection(FirestoreDataModel.beersCol)
         .doc(id)
-        .update({'available': available});
+        .update({'isAvailable': available});
   }
 }
 

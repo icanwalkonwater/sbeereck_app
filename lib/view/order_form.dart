@@ -74,7 +74,7 @@ class _OrderFormState extends State<OrderForm> {
   List<BeerWithType> _beerSelector(
           BuildContext ctx, FirestoreDataModel model) =>
       model.beers
-          .where((beer) => beer.available)
+          .where((beer) => beer.isAvailable)
           .map((beer) => BeerWithType(beer, beer.typeCached(model)))
           .toList(growable: false);
 

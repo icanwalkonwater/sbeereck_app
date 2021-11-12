@@ -45,5 +45,8 @@
   "orderFormChooseQuantity": "Choisissez une Quantité",
   "orderFormQuantityOne": "Demi (25 cl)",
   "orderFormQuantityTwo": "Pinte (1/2 L)",
-  "orderFormTotal": "Total: %total"
+  "orderFormTotal": "Total: %total",
+
+  "beerMakeAvailable": "Rendre disponible ?",
+  "beerMakeUnavailable": "Rendre non disponible ?"
 }

@@ -5,8 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:version/version.dart';
 
 import '../models.dart';
 
@@ -53,11 +51,11 @@ class FirestoreDataModel extends ChangeNotifier {
       if (user == null) return;
 
       _currentStaff = (await FirebaseFirestore.instance
-          .collection(staffsCol)
-          .where('mail', isEqualTo: user.email)
-          .limit(1)
-          .withStaffConverter()
-          .get())
+              .collection(staffsCol)
+              .where('mail', isEqualTo: user.email)
+              .limit(1)
+              .withStaffConverter()
+              .get())
           .docs
           .first
           .data();
@@ -70,7 +68,7 @@ class FirestoreDataModel extends ChangeNotifier {
   }
 
   Future<void> _initListenersAndAll() async {
-    print('Firebase INIT !');
+    log('Firebase INIT !');
     if (_hasBeenInit) {
       return;
     }

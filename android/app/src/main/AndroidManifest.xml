@@ -1,8 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.sbeereck.app.sbeereck_app">
    <application
-        android:label="sbeereck_app"
-        android:icon="@mipmap/ic_launcher">
+        android:label="S'Beer Eck"
+        android:icon="@mipmap/launcher_icons">
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

@@ -7,14 +7,14 @@ import '../providers.dart';
 
 class Beer {
   final String id;
-  final bool available;
+  final bool isAvailable;
   final String name;
   final DocumentReference<BeerType> typeRef;
   final String? image;
 
   const Beer(
       {required this.id,
-      required this.available,
+      required this.isAvailable,
       required this.name,
       required this.typeRef,
       this.image});
@@ -35,14 +35,14 @@ class Beer {
   Beer.fromJson(String id, Map<String, dynamic> raw)
       : this(
           id: id,
-          available: raw['available'],
+          isAvailable: raw['isAvailable'],
           name: raw['name'],
           typeRef: (raw['type'] as DocumentReference).withBeerTypeConverter(),
           image: raw['image'],
         );
 
   Map<String, dynamic> toJson() => {
-        'available': available,
+        'isAvailable': isAvailable,
         'name': name,
         'type': typeRef,
         'image': image,
