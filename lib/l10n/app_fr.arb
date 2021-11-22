@@ -48,5 +48,7 @@
   "orderFormTotal": "Total: %total",
 
   "beerMakeAvailable": "Rendre disponible ?",
-  "beerMakeUnavailable": "Rendre non disponible ?"
+  "beerMakeUnavailable": "Rendre non disponible ?",
+
+  "staffChangeAvailability": "Changer disponibilité ?"
 }
