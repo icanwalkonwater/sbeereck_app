@@ -52,13 +52,10 @@ class FirestoreDataModel extends ChangeNotifier {
 
       _currentStaff = (await FirebaseFirestore.instance
               .collection(staffsCol)
-              .where('mail', isEqualTo: user.email)
-              .limit(1)
+              .doc(user.uid)
               .withStaffConverter()
               .get())
-          .docs
-          .first
-          .data();
+          .data()!;
       notifyListeners();
 
       if (!_hasBeenInit) {

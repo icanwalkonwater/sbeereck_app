@@ -4,7 +4,6 @@ import 'package:sbeereck_app/data/provider/firestore.dart';
 class Staff {
   final String id;
   final String name;
-  final String mail;
   final String tel;
   final bool isAdmin;
   final bool isAvailable;
@@ -12,7 +11,6 @@ class Staff {
   const Staff(
       {required this.id,
       required this.name,
-      required this.mail,
       required this.tel,
       required this.isAdmin,
       required this.isAvailable});
@@ -25,7 +23,6 @@ class Staff {
       : this(
           id: id,
           name: raw['name'],
-          mail: raw['mail'],
           tel: raw['tel'],
           isAdmin: raw['isAdmin'],
           isAvailable: raw['isAvailable'],
@@ -33,7 +30,6 @@ class Staff {
 
   Map<String, dynamic> toJson() => {
         'name': name,
-        'mail': mail,
         'tel': tel,
         'isAdmin': isAdmin,
         'isAvailable': isAvailable,
