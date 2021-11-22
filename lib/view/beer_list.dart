@@ -20,7 +20,7 @@ class BeerList extends StatelessWidget {
         popOnAction: true,
         onOk: (ctx) => ctx
             .read<FirestoreDataModel>()
-            .setAvailability(beer.beer.id, !beer.beer.isAvailable));
+            .setBeerAvailability(beer.beer.id, !beer.beer.isAvailable));
   }
 
   @override
@@ -45,16 +45,18 @@ class _BeerListWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Column(
-          children: children
-              .map((e) => Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8.0, vertical: 4.0),
-                    child: e,
-                  ))
-              .toList(growable: false)),
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Column(
+            children: children
+                .map((e) => Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0, vertical: 4.0),
+                      child: e,
+                    ))
+                .toList(growable: false)),
+      ),
     );
   }
 }

@@ -32,7 +32,8 @@ service cloud.firestore {
 
         match /staffs/{document=**} {
             allow read: if isStaff();
-            allow write: if false;
+            allow create, update: if isAdmin();
+            allow delete: if false;
         }
 
         function isLoggedIn() {

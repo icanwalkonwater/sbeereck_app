@@ -58,5 +58,7 @@
   "orderFormTotal": "Total: %total",
 
   "beerMakeAvailable": "Make available ?",
-  "beerMakeUnavailable": "Make unavailable ?"
+  "beerMakeUnavailable": "Make unavailable ?",
+
+  "staffChangeAvailability": "Change availability ?"
 }

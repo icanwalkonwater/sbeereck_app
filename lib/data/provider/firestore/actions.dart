@@ -50,7 +50,7 @@ extension FirestoreCustomers on FirestoreDataModel {
 
 /// Extension to contain actions possible with beers
 extension FirestoreBeers on FirestoreDataModel {
-  Future<void> setAvailability(String id, bool available) async {
+  Future<void> setBeerAvailability(String id, bool available) async {
     await FirebaseFirestore.instance
         .collection(FirestoreDataModel.beersCol)
         .doc(id)
@@ -81,5 +81,14 @@ extension FirestoreTransaction on FirestoreDataModel {
         .collection(
             '${FirestoreDataModel.eventsCol}/${currentEvent.id}/${FirestoreDataModel.transactionsCol}')
         .add(transaction.toJson());
+  }
+}
+
+extension FirestoreStaffs on FirestoreDataModel {
+  Future<void> setStaffAvailability(Staff staff, bool available) async {
+    await FirebaseFirestore.instance
+        .collection(FirestoreDataModel.staffsCol)
+        .doc(staff.id)
+        .update({'isAvailable': available});
   }
 }

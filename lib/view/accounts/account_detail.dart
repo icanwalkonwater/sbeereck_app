@@ -5,10 +5,10 @@ import 'package:mdi/mdi.dart';
 import 'package:provider/provider.dart';
 import 'package:routemaster/routemaster.dart';
 
-import '../data/models.dart';
-import '../data/providers.dart';
-import '../utils.dart';
-import '../view/account_form.dart';
+import '../../data/models.dart';
+import '../../data/providers.dart';
+import '../../utils.dart';
+import 'account_form.dart';
 import 'account_detail_recharge_form.dart';
 
 class AccountDetailPage extends StatelessWidget {

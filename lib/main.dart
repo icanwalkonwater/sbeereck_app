@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:routemaster/routemaster.dart';
 
 import 'data/providers.dart';
-import 'view/account_detail.dart';
+import 'view/accounts/account_detail.dart';
 import 'view/home.dart';
 import 'view/login.dart';
 import 'view/order_form.dart';

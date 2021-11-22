@@ -6,8 +6,9 @@ import 'package:routemaster/routemaster.dart';
 import 'package:sbeereck_app/view/beer_list.dart';
 
 import '../data/providers.dart';
-import '../view/account_form.dart';
-import '../view/accounts.dart';
+import 'accounts/account_form.dart';
+import 'accounts/accounts.dart';
+import 'staff_list.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -19,6 +20,7 @@ class HomePage extends StatefulWidget {
 enum _TabsIndex {
   accounts,
   beers,
+  staffs,
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
@@ -69,9 +71,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
 
       // Body tabs
-      body: TabBarView(controller: _tabController, children: const [
+      body: TabBarView(controller: _tabController, children: [
         AccountList(),
         BeerList(),
+        StaffList(),
       ]),
 
       // FAB
@@ -90,6 +93,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               icon: const Icon(Mdi.accountGroup), label: l10n.pageAccount),
           BottomNavigationBarItem(
               icon: const Icon(Mdi.glassMugVariant), label: l10n.pageBeers),
+          BottomNavigationBarItem(
+              icon: const Icon(Mdi.shieldAccount), label: 'Staffs'),
         ],
         onTap: _tabController.animateTo,
       ),

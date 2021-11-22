@@ -38,6 +38,8 @@ class FirestoreDataModel extends ChangeNotifier {
 
   List<Beer> get beers => _beers;
 
+  List<Staff> get staffs => _staffs;
+
   Staff get currentStaff => _currentStaff;
 
   bool get isAdmin => _currentStaff.isAdmin;
@@ -99,6 +101,7 @@ class FirestoreDataModel extends ChangeNotifier {
     // Get all staffs
     FirebaseFirestore.instance
         .collection(staffsCol)
+        .orderBy('isAvailable', descending: true)
         .orderBy('name')
         .withStaffConverter()
         .snapshots()
