@@ -132,6 +132,14 @@ class CustomerStat {
 
   const CustomerStat({required this.quantityDrank, required this.totalMoney});
 
+  CustomerStat duplicateAddQuantity(num quantity) {
+    return CustomerStat(quantityDrank: quantityDrank + quantity, totalMoney: totalMoney);
+  }
+
+  CustomerStat duplicateAddMoney(int money) {
+    return CustomerStat(quantityDrank: quantityDrank, totalMoney: totalMoney + money);
+  }
+
   Map<String, dynamic> toJson() => {
         'quantityDrank': quantityDrank,
         'totalMoney': totalMoney,

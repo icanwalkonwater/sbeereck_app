@@ -6,12 +6,7 @@ import '../../models.dart';
 import '../../providers.dart';
 
 /// Extension to contain actions possible with accounts
-extension FirestoreCustomers on FirestoreDataModel {
-  CustomerAccount accountById(String id) {
-    return accounts.firstWhere((acc) => acc.id == id,
-        orElse: () => CustomerAccount.dummy);
-  }
-
+extension FirestoreCustomersActions on FirestoreDataModel {
   Future<String> newAccount(NewCustomerAccount account) async {
     return (await FirebaseFirestore.instance
             .collection(FirestoreDataModel.accountsCol)
@@ -56,7 +51,7 @@ extension FirestoreCustomers on FirestoreDataModel {
 }
 
 /// Extension to contain actions possible with beers
-extension FirestoreBeers on FirestoreDataModel {
+extension FirestoreBeersActions on FirestoreDataModel {
   Future<void> setBeerAvailability(String id, bool available) async {
     await FirebaseFirestore.instance
         .collection(FirestoreDataModel.beersCol)
@@ -65,28 +60,21 @@ extension FirestoreBeers on FirestoreDataModel {
   }
 }
 
-extension FirestoreTransaction on FirestoreDataModel {
+extension FirestoreTransactionActions on FirestoreDataModel {
   Future<void> handleTransaction(
       CustomerAccount account, EventTransaction transaction) async {
     if (transaction is EventTransactionDrink) {
       log('Handle drink transaction');
       await newTransaction(transaction);
       await setAccountBalance(account.id, account.balance - transaction.price);
-      await setAccountStats(
-          account.id,
-          CustomerStat(
-              quantityDrank:
-                  account.stats.quantityDrank + transaction.quantity / 2,
-              totalMoney: account.stats.totalMoney));
+      await setAccountStats(account.id,
+          account.stats.duplicateAddQuantity(transaction.quantityReal));
     } else if (transaction is EventTransactionRecharge) {
       log('Handle recharge transaction');
       await newTransaction(transaction);
       await setAccountBalance(account.id, account.balance + transaction.amount);
       await setAccountStats(
-          account.id,
-          CustomerStat(
-              quantityDrank: account.stats.quantityDrank,
-              totalMoney: account.stats.totalMoney + transaction.amount));
+          account.id, account.stats.duplicateAddMoney(transaction.amount));
     } else {
       logError(
           'Error a transaction that was not drink or recharge was submited !',
@@ -102,7 +90,7 @@ extension FirestoreTransaction on FirestoreDataModel {
   }
 }
 
-extension FirestoreStaffs on FirestoreDataModel {
+extension FirestoreStaffsActions on FirestoreDataModel {
   Future<void> setStaffAvailability(Staff staff, bool available) async {
     await FirebaseFirestore.instance
         .collection(FirestoreDataModel.staffsCol)

@@ -36,8 +36,9 @@
   "accountStatsTitle": "Statistiques",
   "accountStatsDrinkTotal": "Bu au total",
   "accountStatsDrinkToday": "Bu aujourd'hui",
-  "accountStatsSpentTotal": "Dépensé au total",
-  "accountStatsSpentToday": "Dépensé aujourd'hui",
+  "accountStatsSpentTotal": "Rechargé au total",
+  "accountStatsRechargeToday": "Rechargé ce soir",
+  "accountStatsSpentToday": "Bu ce soir",
 
   "orderFormTitle": "Encaisser",
   "orderFormChooseBeer": "Choisissez une Bière",

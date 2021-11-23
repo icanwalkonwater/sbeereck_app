@@ -46,8 +46,9 @@
   "accountStatsTitle": "Statistics",
   "accountStatsDrinkTotal": "Drank all-time",
   "accountStatsDrinkToday": "Drank today",
-  "accountStatsSpentTotal": "Spent all-time",
-  "accountStatsSpentToday": "Spent today",
+  "accountStatsSpentTotal": "Recharge all-time",
+  "accountStatsRechargeToday": "Recharge today",
+  "accountStatsSpentToday": "Drank today",
 
   "orderFormTitle": "Cash In",
   "orderFormChooseBeer": "Choose a Beer",

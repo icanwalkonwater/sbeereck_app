@@ -8,8 +8,15 @@ import 'package:routemaster/routemaster.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../../utils.dart';
-import 'account_form.dart';
 import 'account_detail_recharge_form.dart';
+import 'account_form.dart';
+
+class _AccountWithMoreStats {
+  final CustomerAccount account;
+  final CustomerStat stats;
+
+  _AccountWithMoreStats(this.account, this.stats);
+}
 
 class AccountDetailPage extends StatelessWidget {
   final String id;
@@ -19,8 +26,6 @@ class AccountDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final i10n = AppLocalizations.of(context)!;
-    final account =
-        context.select((FirestoreDataModel model) => model.accountById(id));
 
     return Scaffold(
       appBar: AppBar(
@@ -32,15 +37,24 @@ class AccountDetailPage extends StatelessWidget {
                   await context.read<ThemeModel>().switchTheme())
         ],
       ),
-      body: SingleChildScrollView(child: _AccountDetail(account: account)),
+      body: SingleChildScrollView(
+          child: Selector<FirestoreDataModel, _AccountWithMoreStats>(
+              selector: (_, model) => _AccountWithMoreStats(
+                  model.accountById(id),
+                  model.computeAccountStatsForCurrentEvent(id)),
+              builder: (_, account, __) => _AccountDetail(
+                  account: account.account, statsForEvent: account.stats))),
     );
   }
 }
 
 class _AccountDetail extends StatelessWidget {
   final CustomerAccount account;
+  final CustomerStat statsForEvent;
 
-  const _AccountDetail({Key? key, required this.account}) : super(key: key);
+  const _AccountDetail(
+      {Key? key, required this.account, required this.statsForEvent})
+      : super(key: key);
 
   void _onRecharge(BuildContext context) {
     showDialog(
@@ -117,7 +131,7 @@ class _AccountDetail extends StatelessWidget {
           onEdit: () => _onEdit(context),
           onDelete: () => _onDelete(context),
         ),
-      _AccountStats(account: account),
+      _AccountStats(account: account, statsForEvent: statsForEvent),
     ]);
   }
 }
@@ -362,14 +376,22 @@ class _AccountAction extends StatelessWidget {
 
 class _AccountStats extends StatelessWidget {
   final CustomerAccount account;
+  final CustomerStat statsForEvent;
 
-  const _AccountStats({Key? key, required this.account}) : super(key: key);
+  const _AccountStats(
+      {Key? key, required this.account, required this.statsForEvent})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return _AccountStatsLayout(title: l10n.accountStatsTitle, leftChildren: [
+    // We can do it here because the widget will be updated anyway when a transaction is submitted
+    final spentOnDrinkTonight = context
+        .read<FirestoreDataModel>()
+        .computeMoneySpentInDrinkForCurrentEventForAccount(account.id);
+
+    return _AccountStatsLayout(title: l10n.accountStatsTitle, rowOne: [
       _AccountStatModule(
         icon: Mdi.beer,
         label: l10n.accountStatsDrinkTotal,
@@ -378,9 +400,9 @@ class _AccountStats extends StatelessWidget {
       _AccountStatModule(
         icon: Mdi.beerOutline,
         label: l10n.accountStatsDrinkToday,
-        value: beerQuantityFormatter.format(99.9),
+        value: beerQuantityFormatter.format(statsForEvent.quantityDrank),
       ),
-    ], rightChildren: [
+    ], rowTwo: [
       _AccountStatModule(
         icon: Mdi.piggyBank,
         label: l10n.accountStatsSpentTotal,
@@ -388,8 +410,14 @@ class _AccountStats extends StatelessWidget {
       ),
       _AccountStatModule(
         icon: Mdi.piggyBankOutline,
+        label: l10n.accountStatsRechargeToday,
+        value: moneyFormatter.format(statsForEvent.totalMoneyReal),
+      ),
+    ], rowThree: [
+      _AccountStatModule(
+        icon: Mdi.glassMugVariant,
         label: l10n.accountStatsSpentToday,
-        value: moneyFormatter.format(99.99),
+        value: moneyFormatter.format(spentOnDrinkTonight),
       ),
     ]);
   }
@@ -397,19 +425,22 @@ class _AccountStats extends StatelessWidget {
 
 class _AccountStatsLayout extends StatelessWidget {
   final String title;
-  final List<Widget> leftChildren;
-  final List<Widget> rightChildren;
+  final List<Widget> rowOne;
+  final List<Widget> rowTwo;
+  final List<Widget> rowThree;
 
   const _AccountStatsLayout(
       {Key? key,
       required this.title,
-      required this.leftChildren,
-      required this.rightChildren})
+      required this.rowOne,
+      required this.rowTwo,
+      required this.rowThree})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Card(
       elevation: 2.0,
       child: Padding(
@@ -423,14 +454,21 @@ class _AccountStatsLayout extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: leftChildren),
+                  children: rowOne),
             ),
             const Divider(),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: rightChildren),
+                  children: rowTwo),
+            ),
+            const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: rowThree),
             ),
           ],
         ),

@@ -42,6 +42,8 @@ extension EventPeriodConverterQ<T> on Query<T> {
 enum EventTransactionType { drink, recharge }
 
 abstract class EventTransaction {
+  String get customerId;
+
   Map<String, dynamic> toJson();
 }
 
@@ -54,16 +56,6 @@ class EventTransactionDrink implements EventTransaction {
   final DocumentReference<CustomerAccount> customerRef;
   final DocumentReference<Staff> staffRef;
   final Timestamp createdAt;
-
-  num get priceReal => price.toDouble() / 100.0;
-
-  Future<Beer> get beer async => (await beerRef.get(optionFromCache)).data()!;
-
-  Future<CustomerAccount> get customer async =>
-      (await customerRef.get(optionFromCache)).data()!;
-
-  Future<Staff> get staff async =>
-      (await staffRef.get(optionFromCache)).data()!;
 
   EventTransactionDrink(
       {required this.id,
@@ -100,6 +92,22 @@ class EventTransactionDrink implements EventTransaction {
           staffRef: (raw['staff'] as DocumentReference).withStaffConverter(),
           createdAt: raw['createdAt'],
         );
+
+  @override
+  String get customerId => customerRef.id;
+
+  num get priceReal => price.toDouble() / 100.0;
+
+  // 1 -> 0.25L
+  num get quantityReal => quantity / 4.0;
+
+  Future<Beer> get beer async => (await beerRef.get(optionFromCache)).data()!;
+
+  Future<CustomerAccount> get customer async =>
+      (await customerRef.get(optionFromCache)).data()!;
+
+  Future<Staff> get staff async =>
+      (await staffRef.get(optionFromCache)).data()!;
 
   @override
   Map<String, dynamic> toJson() => {
@@ -147,6 +155,9 @@ class EventTransactionRecharge implements EventTransaction {
           staffRef: (raw['staff'] as DocumentReference).withStaffConverter(),
           createdAt: raw['createdAt'],
         );
+
+  @override
+  String get customerId => customerRef.id;
 
   @override
   Map<String, dynamic> toJson() => {

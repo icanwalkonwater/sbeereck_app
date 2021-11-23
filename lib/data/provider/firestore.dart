@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../models.dart';
 
 export 'firestore/actions.dart';
+export 'firestore/queries.dart';
 
 const optionFromCache = GetOptions(source: Source.cache);
 
@@ -45,6 +46,8 @@ class FirestoreDataModel extends ChangeNotifier {
   bool get isAdmin => _currentStaff.isAdmin;
 
   EventPeriod get currentEvent => _currentEvent;
+
+  List<EventTransaction> get currentEventTransactions => _transactions;
 
   // Setup snapshot listening
   FirestoreDataModel() {
@@ -129,7 +132,7 @@ class FirestoreDataModel extends ChangeNotifier {
           .orderBy('createdAt', descending: true)
           .withEventTransactionConverter()
           .snapshots()
-          .listen(handleChangesFactory(_transactions));
+          .listen(handleChangesFactory<EventTransaction>(_transactions), onError: logError);
     }, onError: logError);
 
     notifyListeners();

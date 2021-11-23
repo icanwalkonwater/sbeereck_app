@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 final moneyFormatter = NumberFormat.currency(symbol: '€');
-final beerQuantityFormatter = NumberFormat('0.# L');
+final beerQuantityFormatter = NumberFormat('0.00 L');
 
 void Function(T) debounce<T>(Duration timeout, void Function(T) handler) {
   Timer? timer;
