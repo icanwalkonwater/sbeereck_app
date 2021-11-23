@@ -40,6 +40,13 @@ extension FirestoreCustomers on FirestoreDataModel {
         .update({'balance': newBalance});
   }
 
+  Future<void> setAccountStats(String id, CustomerStat stats) async {
+    await FirebaseFirestore.instance
+        .collection(FirestoreDataModel.accountsCol)
+        .doc(id)
+        .update({'stats': stats.toJson()});
+  }
+
   Future<void> deleteAccount(String id) async {
     await FirebaseFirestore.instance
         .collection(FirestoreDataModel.accountsCol)
@@ -65,10 +72,21 @@ extension FirestoreTransaction on FirestoreDataModel {
       log('Handle drink transaction');
       await newTransaction(transaction);
       await setAccountBalance(account.id, account.balance - transaction.price);
+      await setAccountStats(
+          account.id,
+          CustomerStat(
+              quantityDrank:
+                  account.stats.quantityDrank + transaction.quantity / 2,
+              totalMoney: account.stats.totalMoney));
     } else if (transaction is EventTransactionRecharge) {
       log('Handle recharge transaction');
       await newTransaction(transaction);
       await setAccountBalance(account.id, account.balance + transaction.amount);
+      await setAccountStats(
+          account.id,
+          CustomerStat(
+              quantityDrank: account.stats.quantityDrank,
+              totalMoney: account.stats.totalMoney + transaction.amount));
     } else {
       logError(
           'Error a transaction that was not drink or recharge was submited !',

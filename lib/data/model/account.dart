@@ -125,7 +125,7 @@ extension SchoolData on CustomerSchool {
 }
 
 class CustomerStat {
-  final int quantityDrank;
+  final num quantityDrank;
   final int totalMoney;
 
   num get totalMoneyReal => totalMoney.toDouble() / 100.0;
