@@ -1,0 +1,22 @@
+[package]
+name = "migration_tools"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Config stuff
+dotenv = "^0.15"
+dotenv_codegen = "^0.15"
+
+# Google sheets stuff
+google-sheets4 = "^2.0"
+hyper = "^0.14"
+hyper-rustls = "^0.22"
+serde = "^1.0"
+serde_json = "^1.0"
+yup-oauth2 = "^5.0"
+
+# Firestore stuff
+firestore-db-and-auth = "^0.6"
+
+tokio = { version = "^1.14", features = ["macros", "rt"] }

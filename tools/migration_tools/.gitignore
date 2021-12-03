@@ -1,0 +1,5 @@
+.env
+target/
+google_key.json
+google_key_cache.json
+firebase_service_account.json
