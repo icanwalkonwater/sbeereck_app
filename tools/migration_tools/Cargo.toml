@@ -4,19 +4,15 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-# Config stuff
-dotenv = "^0.15"
-dotenv_codegen = "^0.15"
+# Random stuff
+anyhow = "^1.0"
+dialoguer = "^0.10"
+pager = "^0.16"
 
-# Google sheets stuff
-google-sheets4 = "^2.0"
-hyper = "^0.14"
-hyper-rustls = "^0.22"
+# Sheet stuff
+csv = "^1.1"
 serde = "^1.0"
 serde_json = "^1.0"
-yup-oauth2 = "^5.0"
 
 # Firestore stuff
 firestore-db-and-auth = "^0.6"
-
-tokio = { version = "^1.14", features = ["macros", "rt"] }

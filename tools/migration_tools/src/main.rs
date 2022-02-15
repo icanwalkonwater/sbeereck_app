@@ -1,13 +1,16 @@
-use dotenv_codegen::dotenv;
+#![feature(path_try_exists)]
+
+use anyhow::anyhow;
+use dialoguer::{theme::ColorfulTheme, Input, Select};
 use firestore_db_and_auth::{
     documents, documents::List, sessions::service_account::Session, ServiceSession,
 };
-use google_sheets4::Sheets;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
+use std::path::Path;
 
 #[repr(i32)]
-#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone)]
+#[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, Deserialize)]
+#[serde(rename_all = "lowercase")]
 enum School {
     ENSIMAG,
     PHELMA,
@@ -18,38 +21,17 @@ enum School {
     ESISAR,
     IAE,
     UGA,
+    #[serde(other)]
     UNKNOWN,
 }
 
-impl FromStr for School {
-    type Err = ();
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s.to_lowercase().as_str() {
-            "ensimag" => School::ENSIMAG,
-            "phelma" => School::PHELMA,
-            "e3" => School::E3,
-            "papet" => School::PAPET,
-            "gi" => School::GI,
-            "polytech" => School::POLYTECH,
-            "esisar" => School::ESISAR,
-            "iae" => School::IAE,
-            "uga" => School::UGA,
-            _ => School::UNKNOWN,
-        })
-    }
-}
-
-#[derive(Debug, Clone)]
-struct SheetAccount {
+#[derive(Debug, Clone, Deserialize)]
+struct CsvAccount {
     last_name: String,
     first_name: String,
     school: School,
-    is_member: bool,
+    tel: String,
     balance: f32,
-    normal: u32,
-    special: u32,
-    recharge: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -70,42 +52,24 @@ struct FirestoreAccountStats {
     total_money: i32,
 }
 
-impl From<SheetAccount> for FirestoreAccount {
-    fn from(sheet: SheetAccount) -> Self {
+impl From<CsvAccount> for FirestoreAccount {
+    fn from(sheet: CsvAccount) -> Self {
         FirestoreAccount {
             last_name: sheet.last_name,
             first_name: sheet.first_name,
             school: sheet.school as _,
-            is_member: sheet.is_member,
+            is_member: true,
             balance: (sheet.balance * 100.0).round() as _,
             stats: FirestoreAccountStats {
+                quantity_drank: 0.0,
+                total_money: 0,
+            },
+            /*stats: FirestoreAccountStats {
                 quantity_drank: (sheet.normal + sheet.special) as _,
                 total_money: (sheet.recharge * 100.0).round() as _,
-            },
+            },*/
         }
     }
-}
-
-async fn sheets_init() -> Sheets {
-    let secret = yup_oauth2::read_application_secret("google_key.json")
-        .await
-        .expect("Failed to get app secret !");
-
-    let auth = yup_oauth2::InstalledFlowAuthenticator::builder(
-        secret,
-        yup_oauth2::InstalledFlowReturnMethod::HTTPRedirect,
-    )
-    .persist_tokens_to_disk("google_key_cache.json")
-    .build()
-    .await
-    .unwrap();
-
-    let hub = Sheets::new(
-        hyper::Client::builder().build(hyper_rustls::HttpsConnector::with_native_roots()),
-        auth,
-    );
-
-    hub
 }
 
 fn parse_money(raw: &str) -> f32 {
@@ -117,7 +81,27 @@ fn parse_money(raw: &str) -> f32 {
         .unwrap()
 }
 
-async fn sheets_get_all(hub: Sheets) -> Vec<SheetAccount> {
+fn list_accounts_to_add() -> anyhow::Result<Vec<CsvAccount>> {
+    let file = Input::with_theme(&ColorfulTheme::default())
+        .with_prompt("Where is the account data ?")
+        .default("accounts.csv".to_string())
+        .show_default(true)
+        .allow_empty(false)
+        .validate_with(|input: &String| -> anyhow::Result<()> {
+            Ok(Path::new(input).try_exists().map(|_| ())?)
+        })
+        .interact_text()?;
+
+    let csv = csv::ReaderBuilder::new()
+        .delimiter(',' as _)
+        .from_path(file)?;
+
+    csv.into_deserialize()
+        .map(|line| line.map_err(|e| anyhow!(e)))
+        .collect()
+}
+
+/*async fn sheets_get_all(hub: Sheets) -> Vec<SheetAccount> {
     let (_, range) = hub
         .spreadsheets()
         .values_get(dotenv!("SHEETS_ID"), "Comptes!B2:O1548")
@@ -159,7 +143,7 @@ async fn sheets_get_all(hub: Sheets) -> Vec<SheetAccount> {
                 .unwrap_or(0.0),
         })
         .collect()
-}
+}*/
 
 fn firestore_init() -> Session {
     let mut credentials =
@@ -173,22 +157,48 @@ fn firestore_init() -> Session {
     ServiceSession::new(credentials).expect("Failed to create session")
 }
 
-#[tokio::main(flavor = "current_thread")]
-async fn main() {
-    dotenv::dotenv().expect("Failed to initialize dotenv");
-    let sheets = sheets_init().await;
-    let accounts = sheets_get_all(sheets).await;
+fn list_firestore_accounts() -> Vec<FirestoreAccount> {
+    let firestore = firestore_init();
+    let accounts: List<FirestoreAccount, _> = documents::list(&firestore, "accounts");
 
-    for a in &accounts[..10] {
+    accounts
+        .into_iter()
+        .map(|acc| acc.map(|(doc, _)| doc).unwrap())
+        .collect()
+}
+
+fn main() -> anyhow::Result<()> {
+    let action = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("What do you want to do ?")
+        .item("List current firebase accounts")
+        .item("List accounts to add")
+        .item("Delete all firebase account")
+        .item("Append accounts to firebase")
+        .default(0)
+        .interact()?;
+
+    match action {
+        0 => {
+            for acc in list_firestore_accounts() {
+                println!("{:?}", acc);
+            }
+        }
+        1 => {
+            for acc in list_accounts_to_add()?.into_iter().take(10) {
+                println!("{:?}", acc);
+            }
+        }
+        _ => println!("Unknown option"),
+    }
+
+    // let sheets = sheets_init().await;
+    //let accounts = sheets_get_all(sheets).await;
+
+    /*for a in &accounts[..10] {
         println!("{:?}", a);
         println!("{:?}", FirestoreAccount::from(a.clone()))
     }
-    println!("...and {} more", accounts.len() - 10);
+    println!("...and {} more", accounts.len() - 10);*/
 
-    let firestore = firestore_init();
-    let accounts: List<FirestoreAccount, _> = documents::list(&firestore, "accounts");
-    for a in accounts {
-        let (doc, _) = a.unwrap();
-        println!("{:?}", doc);
-    }
+    Ok(())
 }
