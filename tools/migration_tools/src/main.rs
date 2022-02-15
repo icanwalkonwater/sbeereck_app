@@ -1,12 +1,20 @@
 #![feature(path_try_exists)]
 
-use anyhow::anyhow;
-use dialoguer::{theme::ColorfulTheme, Input, Select};
+use anyhow::{anyhow, bail};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
 use firestore_db_and_auth::{
-    documents, documents::List, sessions::service_account::Session, ServiceSession,
+    documents,
+    documents::{List, WriteOptions},
+    sessions::service_account::Session,
+    ServiceSession,
 };
+use indicatif::{ProgressBar, ProgressIterator};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::{
+    fs::File,
+    io::{Read, Write},
+    path::Path,
+};
 
 #[repr(i32)]
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, Deserialize)]
@@ -30,7 +38,7 @@ struct CsvAccount {
     last_name: String,
     first_name: String,
     school: School,
-    tel: String,
+    // tel: String,
     balance: f32,
 }
 
@@ -72,23 +80,44 @@ impl From<CsvAccount> for FirestoreAccount {
     }
 }
 
-fn parse_money(raw: &str) -> f32 {
-    raw.chars()
-        .take_while(|&c| c != ' ' && c != '€')
-        .collect::<String>()
-        .replace(",", ".")
-        .parse()
-        .unwrap()
+fn firestore_init() -> anyhow::Result<Session> {
+    let mut credentials =
+        firestore_db_and_auth::Credentials::from_file("firebase_service_account.json")?;
+
+    credentials.download_google_jwks()?;
+
+    Ok(ServiceSession::new(credentials)?)
 }
 
-fn list_accounts_to_add() -> anyhow::Result<Vec<CsvAccount>> {
+fn get_firestore_accounts() -> anyhow::Result<Vec<FirestoreAccount>> {
+    let firestore = firestore_init()?;
+    let accounts: List<FirestoreAccount, _> = documents::list(&firestore, "accounts");
+
+    Ok(accounts
+        .into_iter()
+        .map(|acc| acc.map(|(doc, _)| doc).unwrap())
+        .collect())
+}
+
+fn list_firestore_accounts() -> anyhow::Result<()> {
+    let accounts = get_firestore_accounts()?;
+
+    println!("Collected {} firestore accounts:", accounts.len());
+    for acc in accounts {
+        println!("{:?}", acc);
+    }
+    Ok(())
+}
+
+fn list_file_accounts() -> anyhow::Result<()> {
     let file = Input::with_theme(&ColorfulTheme::default())
         .with_prompt("Where is the account data ?")
         .default("accounts.csv".to_string())
         .show_default(true)
         .allow_empty(false)
         .validate_with(|input: &String| -> anyhow::Result<()> {
-            Ok(Path::new(input).try_exists().map(|_| ())?)
+            Path::new(input).try_exists()?;
+            Ok(())
         })
         .interact_text()?;
 
@@ -96,75 +125,147 @@ fn list_accounts_to_add() -> anyhow::Result<Vec<CsvAccount>> {
         .delimiter(',' as _)
         .from_path(file)?;
 
-    csv.into_deserialize()
+    let accounts = csv
+        .into_deserialize()
         .map(|line| line.map_err(|e| anyhow!(e)))
-        .collect()
+        .collect::<anyhow::Result<Vec<CsvAccount>>>()?;
+
+    println!("Collected {} accounts:", accounts.len());
+    for acc in accounts {
+        println!("{:?}", acc);
+    }
+    Ok(())
 }
 
-/*async fn sheets_get_all(hub: Sheets) -> Vec<SheetAccount> {
-    let (_, range) = hub
-        .spreadsheets()
-        .values_get(dotenv!("SHEETS_ID"), "Comptes!B2:O1548")
-        .doit()
-        .await
-        .expect("Request failed");
-
-    range
-        .values
-        .expect("No values with request")
-        .into_iter()
-        .map(|row| SheetAccount {
-            last_name: row[0].clone(),
-            first_name: row[1].clone(),
-            school: row
-                .get(2)
-                .map(|c| School::from_str(c).unwrap())
-                .unwrap_or(School::UNKNOWN),
-            is_member: row.get(4).map(|c| c == "TRUE").unwrap_or(false),
-            balance: row
-                .get(6)
-                .filter(|c| !c.is_empty())
-                .map(|c| parse_money(c))
-                .unwrap_or(0.0),
-            normal: row
-                .get(7)
-                .filter(|c| !c.is_empty())
-                .map(|c| c.parse().unwrap())
-                .unwrap_or(0),
-            special: row
-                .get(8)
-                .filter(|c| !c.is_empty())
-                .map(|c| c.parse().unwrap())
-                .unwrap_or(0),
-            recharge: row
-                .get(10)
-                .filter(|c| !c.is_empty())
-                .map(|c| parse_money(c))
-                .unwrap_or(0.0),
+fn backup_firestore_accounts() -> anyhow::Result<()> {
+    let file = Input::with_theme(&ColorfulTheme::default())
+        .with_prompt("Where to backup the data ?")
+        .default("firestore_backup.json".to_string())
+        .show_default(true)
+        .allow_empty(false)
+        .validate_with(|input: &String| -> anyhow::Result<()> {
+            let path = Path::new(input);
+            if path.is_dir() {
+                bail!("You can't use a folder as destination !");
+            }
+            Ok(())
         })
-        .collect()
-}*/
+        .interact_text()?;
 
-fn firestore_init() -> Session {
-    let mut credentials =
-        firestore_db_and_auth::Credentials::from_file("firebase_service_account.json")
-            .expect("Failed read firebase credentials");
+    let progress = ProgressBar::new_spinner();
+    progress.enable_steady_tick(120);
 
-    credentials
-        .download_google_jwks()
-        .expect("Failed to download public keys");
+    progress.set_message("Creating file");
+    let mut file = File::create(file)?;
+    progress.inc(1);
 
-    ServiceSession::new(credentials).expect("Failed to create session")
+    progress.set_message("Querying accounts");
+    let accounts = get_firestore_accounts()?;
+    progress.set_message(format!("Queried {} accounts", accounts.len()));
+    progress.inc(1);
+
+    progress.set_message("Writing to file");
+    file.write_all(serde_json::to_string(&accounts)?.as_bytes())?;
+    progress.finish();
+    Ok(())
 }
 
-fn list_firestore_accounts() -> Vec<FirestoreAccount> {
-    let firestore = firestore_init();
-    let accounts: List<FirestoreAccount, _> = documents::list(&firestore, "accounts");
+fn restore_backup_firestore() -> anyhow::Result<()> {
+    let file = Input::with_theme(&ColorfulTheme::default())
+        .with_prompt("Where is the backup data ?")
+        .default("firestore_backup.json".to_string())
+        .show_default(true)
+        .allow_empty(false)
+        .validate_with(|input: &String| -> anyhow::Result<()> {
+            Path::new(input).try_exists()?;
+            Ok(())
+        })
+        .interact_text()?;
 
-    accounts
-        .into_iter()
-        .map(|acc| acc.map(|(doc, _)| doc).unwrap())
-        .collect()
+    let progress = ProgressBar::new_spinner();
+    progress.enable_steady_tick(120);
+
+    progress.set_message("Reading account data");
+    let accounts = {
+        let mut file = File::open(file)?;
+        let mut data = String::new();
+        file.read_to_string(&mut data)?;
+        serde_json::from_str::<Vec<FirestoreAccount>>(&data)?
+    };
+    progress.finish();
+
+    let confirm = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!(
+            "Do you really want to restore {} accounts ?",
+            accounts.len()
+        ))
+        .default(false)
+        .show_default(true)
+        .interact()?;
+
+    if !confirm {
+        println!("Understandable, have a great day");
+        return Ok(());
+    }
+
+    progress.reset();
+    progress.enable_steady_tick(120);
+    progress.set_message("Uploading accounts");
+    let session = firestore_init()?;
+    for acc in accounts.into_iter().progress() {
+        documents::write(
+            &session,
+            "accounts",
+            Option::<String>::None,
+            &acc,
+            WriteOptions::default(),
+        )?;
+    }
+    progress.finish_with_message("Done");
+
+    Ok(())
+}
+
+fn delete_firestore_accounts() -> anyhow::Result<()> {
+    let confirm = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt("Do you really want to delete all accounts ?")
+        .default(false)
+        .show_default(true)
+        .interact()?;
+
+    if !confirm {
+        println!("Understandable, have a great day");
+        return Ok(());
+    }
+
+    let confirm = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt("Like for real ??")
+        .default(false)
+        .show_default(true)
+        .interact()?;
+
+    if !confirm {
+        println!("Understandable, have a great day");
+        return Ok(());
+    }
+
+    let progress = ProgressBar::new_spinner();
+    progress.enable_steady_tick(120);
+
+    progress.set_message("Querying accounts to delete");
+    let session = firestore_init()?;
+    let accounts: List<FirestoreAccount, _> = documents::list(&session, "accounts");
+
+    progress.set_message("Deleting accounts");
+    for acc in accounts {
+        let (_, doc) = acc?;
+        progress.inc(1);
+        documents::delete(&session, documents::abs_to_rel(&doc.name), true)?;
+    }
+
+    println!("Adios amigos");
+
+    Ok(())
 }
 
 fn main() -> anyhow::Result<()> {
@@ -172,22 +273,19 @@ fn main() -> anyhow::Result<()> {
         .with_prompt("What do you want to do ?")
         .item("List current firebase accounts")
         .item("List accounts to add")
-        .item("Delete all firebase account")
+        .item("Backup firestore accounts")
+        .item("Restore firestore backup")
+        .item("Delete all firebase accounts")
         .item("Append accounts to firebase")
         .default(0)
         .interact()?;
 
     match action {
-        0 => {
-            for acc in list_firestore_accounts() {
-                println!("{:?}", acc);
-            }
-        }
-        1 => {
-            for acc in list_accounts_to_add()?.into_iter().take(10) {
-                println!("{:?}", acc);
-            }
-        }
+        0 => list_firestore_accounts()?,
+        1 => list_file_accounts()?,
+        2 => backup_firestore_accounts()?,
+        3 => restore_backup_firestore()?,
+        4 => delete_firestore_accounts()?,
         _ => println!("Unknown option"),
     }
 

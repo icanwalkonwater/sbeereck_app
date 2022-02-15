@@ -8,6 +8,7 @@ edition = "2021"
 anyhow = "^1.0"
 dialoguer = "^0.10"
 pager = "^0.16"
+indicatif = "^0.17.0-rc.4"
 
 # Sheet stuff
 csv = "^1.1"
