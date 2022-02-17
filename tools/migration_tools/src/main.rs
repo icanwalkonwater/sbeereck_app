@@ -61,13 +61,13 @@ struct FirestoreAccountStats {
 }
 
 impl From<CsvAccount> for FirestoreAccount {
-    fn from(sheet: CsvAccount) -> Self {
+    fn from(csv: CsvAccount) -> Self {
         FirestoreAccount {
-            last_name: sheet.last_name,
-            first_name: sheet.first_name,
-            school: sheet.school as _,
+            last_name: csv.last_name,
+            first_name: csv.first_name,
+            school: csv.school as _,
             is_member: true,
-            balance: (sheet.balance * 100.0).round() as _,
+            balance: (csv.balance * 100.0).round() as _,
             stats: FirestoreAccountStats {
                 quantity_drank: 0.0,
                 total_money: 0,
@@ -131,9 +131,25 @@ fn list_file_accounts() -> anyhow::Result<()> {
         .collect::<anyhow::Result<Vec<CsvAccount>>>()?;
 
     println!("Collected {} accounts:", accounts.len());
-    for acc in accounts {
+    for acc in &accounts {
         println!("{:?}", acc);
     }
+
+    let confirm = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt("Do you want to see them converted ?")
+        .default(false)
+        .show_default(true)
+        .interact()?;
+
+    if !confirm {
+        println!("Understandable, have a great day");
+        return Ok(());
+    }
+
+    for acc in accounts {
+        println!("{:?}", FirestoreAccount::from(acc));
+    }
+
     Ok(())
 }
 
@@ -166,7 +182,7 @@ fn backup_firestore_accounts() -> anyhow::Result<()> {
 
     progress.set_message("Writing to file");
     file.write_all(serde_json::to_string(&accounts)?.as_bytes())?;
-    progress.finish();
+    progress.finish_with_message("Done");
     Ok(())
 }
 
@@ -268,6 +284,68 @@ fn delete_firestore_accounts() -> anyhow::Result<()> {
     Ok(())
 }
 
+fn append_accounts() -> anyhow::Result<()> {
+    let file = Input::with_theme(&ColorfulTheme::default())
+        .with_prompt("Where is the account data ?")
+        .default("accounts.csv".to_string())
+        .show_default(true)
+        .allow_empty(false)
+        .validate_with(|input: &String| -> anyhow::Result<()> {
+            Path::new(input).try_exists()?;
+            Ok(())
+        })
+        .interact_text()?;
+
+    let progress = ProgressBar::new_spinner();
+    progress.enable_steady_tick(120);
+
+    progress.set_message("Reading and converting account data");
+    let csv = csv::ReaderBuilder::new()
+        .delimiter(',' as _)
+        .from_path(file)?;
+
+    let accounts = csv
+        .into_deserialize()
+        .map(|line| line.map_err(|e| anyhow!(e)))
+        .collect::<anyhow::Result<Vec<CsvAccount>>>()?;
+    let accounts = accounts
+        .into_iter()
+        .map(|acc| FirestoreAccount::from(acc))
+        .collect::<Vec<_>>();
+    progress.finish();
+
+    let confirm = Confirm::with_theme(&ColorfulTheme::default())
+        .with_prompt(format!(
+            "Do you really want to append {} accounts ?",
+            accounts.len()
+        ))
+        .default(false)
+        .show_default(true)
+        .interact()?;
+
+    if !confirm {
+        println!("Understandable, have a great day");
+        return Ok(());
+    }
+
+    progress.reset();
+    progress.enable_steady_tick(120);
+    progress.set_message("Uploading accounts");
+    let session = firestore_init()?;
+    for acc in accounts.into_iter().progress() {
+        documents::write(
+            &session,
+            "accounts",
+            Option::<String>::None,
+            &acc,
+            WriteOptions::default(),
+        )?;
+    }
+    progress.finish_with_message("Done");
+
+    Ok(())
+}
+
 fn main() -> anyhow::Result<()> {
     let action = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("What do you want to do ?")
@@ -286,6 +364,7 @@ fn main() -> anyhow::Result<()> {
         2 => backup_firestore_accounts()?,
         3 => restore_backup_firestore()?,
         4 => delete_firestore_accounts()?,
+        5 => append_accounts()?,
         _ => println!("Unknown option"),
     }
 

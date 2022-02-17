@@ -1,4 +1,4 @@
 target/
 firebase_service_account.json
-accounts.csv
-firestore_backup.json
+*.csv
+*backup*.json
