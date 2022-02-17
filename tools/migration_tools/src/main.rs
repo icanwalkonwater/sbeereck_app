@@ -18,7 +18,7 @@ use std::{
 
 #[repr(i32)]
 #[derive(Debug, Eq, PartialEq, Hash, Copy, Clone, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all(serialize = "lowercase"))]
 enum School {
     ENSIMAG,
     PHELMA,
